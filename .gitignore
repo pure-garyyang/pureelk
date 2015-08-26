@@ -1,0 +1,10 @@
+*.pyc
+**/*.idea
+*.diff
+\.pureelk.*
+*.log
+*.bak
+*.orig
+celerybeat-schedule
+container/worker/conf/
+container/worker/celerybeat-schedule.db

@@ -1,0 +1,121 @@
+.statuscard {
+    height: 180px;
+    position: relative;
+    transform: perspective(1000px);
+    transform-style: preserve-3d;
+    width: 100%;
+}
+
+.card-title {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    height: 33px;
+    line-height: 33px;
+    margin: 7px 0;
+    overflow: hidden;
+    padding: 0 40px;
+    text-align: center;
+    text-overflow: ellipsis;
+}
+
+.card-info {
+    border-bottom: 1px solid #a8a8aa;
+    border-top: 1px solid #a8a8aa;
+    height: 22px;
+}
+
+.card-info > div {
+    background-color: #e6e6e6;
+    display: inline-block;
+    font-size: 14px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.card-info .card-info-os {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-remove-array {
+    cursor: pointer;
+    font-size: 16px;
+    height: 20px;
+    line-height: 22px;
+    position: relative;
+    text-align: center;
+    width: 20px;
+}
+
+.card-remove-array-btn {
+    position: absolute;
+    right: 20px;
+    top: 1px;
+}
+
+.card-change-array-btn {
+    position: absolute;
+    left: 0px;
+    top: 1px;
+}
+
+.card-actions {
+    border-bottom: 1px solid #a8a8aa;
+    border-top: 1px solid #a8a8aa;
+    margin-top: 13px;
+}
+
+.card-actions > .card-actions-change-status {
+    border-right: 1px solid #a8a8aa;
+}
+
+.card-actions > .card-actions-delete-array {
+    display: inline-block;
+    height: 100%;
+    text-align: center;
+    width: 49.7%;
+}
+
+.card-collection-status > div {
+    display: inline-block;
+    font-size: 14px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.height-adjust > div {
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+
+.card-collection-status > .card-collection-status-title {
+    margin-top: 7px;
+}
+
+.card-collection-status > .card-collection-status-content {
+    font-size: 25px;
+}
+
+.btn.borderless {
+    border: none;
+    background: none;
+}
+
+.glyphicon.extra-large {
+    min-height: 180px;
+    line-height: 180px;
+    font-size: 60px;
+    display: block;
+    text-align: center;
+}
+
+.navbar-purestorage {
+    background-color:#FFAD33;
+    color:#ffffff;
+    border-radius:0;
+}

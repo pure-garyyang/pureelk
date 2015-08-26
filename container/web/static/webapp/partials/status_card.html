@@ -1,0 +1,37 @@
+<div class="thumbnail">
+    <div class="statuscard">
+
+        <div class="card-remove-array card-change-array-btn">
+            <button type="button" class="btn" aria-label="Stop FlashArray" ng-click="changeArrayCollectionStatus(flasharray)">
+                <span ng-class="isCollecting(flasharray) ? 'glyphicon glyphicon-pause' : 'glyphicon glyphicon-play'" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="card-remove-array card-remove-array-btn">
+            <button type="button" class="btn" aria-label="Delete FlashArray" ng-click="deleteArray(flasharray.id)">
+                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="card-title">
+            <span>{{ flasharray.name }}</span>
+        </div>
+
+        <div class="card-info">
+            <div class="card-info-os">
+                Purity {{ flasharray.purity_version }}
+            </div>
+        </div>
+
+        <div class="card-collection-status">
+            <div class="card-collection-status-title">Status</div>
+            <div class="card-collection-status-content">{{ getCollectionStatus(flasharray) }}</div>
+        </div>
+
+        <div class="card-collection-status">
+            <div class="card-collection-status-title">Last collected</div>
+            <div class="card-collection-status-content">{{ getUpdatedAgo(flasharray.task_timestamp) }}</div>
+        </div>
+
+    </div>
+</div>

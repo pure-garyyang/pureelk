@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="pureelk">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="cary.li@purestorage.com;garyyang@purestorage.com">
+    <link rel="icon" href="img/favicon.ico">
+
+    <title>PureELK</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="css/pureelk.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">PureELK</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <form class="navbar-form navbar-right">
+                <a target="_blank" href="https://github.com/gary-yang/PureElk" class="btn btn-success">Follow us at GitHub</a>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- just two lines to move the container DIV down a bit -->
+<hr/>
+<hr/>
+
+<div class="container">
+
+    <div ng-view></div>
+
+</div>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="js/jquery.min.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="js/angular-route.min.js"></script>
+<script src="js/angular-resource.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/moment.min.js"></script>
+
+<script src="webapp/app.js"></script>
+<script src="webapp/directives/animatedView.js"></script>
+
+</body>
+</html>
