@@ -43,20 +43,20 @@ install() {
     docker pull kibana
 
     print_info "Pulling pureelk image..."
-    docker pull garyyang/pureelk
+    docker pull pureelk/pureelk
 
     print_info "Create local pureelk folders at $PUREELK_PATH"
 
     if [ ! -d "$PUREELK_CONF" ]; then
-        mkdir -p $PUREELK_CONF
+        sudo mkdir -p $PUREELK_CONF
     fi
 
     if [ ! -d "$PUREELK_ESDATA" ]; then
-        mkdir -p $PUREELK_ESDATA
+        sudo mkdir -p $PUREELK_ESDATA
     fi
 
     if [ ! -d "$PUREELK_LOG" ]; then
-        mkdir -p $PUREELK_LOG
+        sudo mkdir -p $PUREELK_LOG
     fi
    
     print_info "Install completed."
@@ -94,7 +94,7 @@ start_containers() {
     if [ $? -eq 1 ];
     then
         print_warn "$PUREELK does not exist yet, run a new one..."
-        docker run -d -p 8080:8080 --name=$PUREELK -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch garyyang/pureelk
+        docker run -d -p 8080:8080 --name=$PUREELK -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
     elif [ "$RUNNING" == "false" ];
     then
         docker start $PUREELK
