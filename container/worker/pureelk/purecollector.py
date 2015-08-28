@@ -24,7 +24,7 @@ arraymap = """
     "mappings" : {
         "arrayperf":{
             "properties":{
-                "name":{"type":"string","index":"not_analyzed"},
+                "array_name":{"type":"string","index":"not_analyzed"},
                 "array_id":{"type":"string","index":"not_analyzed"},
                 "hostname":{"type":"string","index":"not_analyzed"}
             },
@@ -107,7 +107,7 @@ class PureCollector(object):
 
         # get the overall array info for performance
         ap = self._ps_client.get(action='monitor')
-        ap[0]['name'] = self._array_name
+        ap[0]['array_name'] = self._array_name
         ap[0]['array_id'] = self._array_id
 
         # now get the information for space
