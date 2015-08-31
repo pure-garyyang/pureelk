@@ -148,17 +148,9 @@ class PureCollector(object):
             vp[0]['array_id'] = self._array_id
             vp[0][PureCollector._timeofquery_key] = timeofquery_str
             
-            # get space stats per volume
+            # get space stats per volume and append 
             vs = self._ps_client.get_volume(v['name'], space=True)
-            vp[0]['system'] = vs['system']
-            vp[0]['snapshots'] = vs['snapshots']
-            vp[0]['total_reduction'] = vs['total_reduction']
-            vp[0]['volumes'] = vs['volumes']
-            vp[0]['data_reduction'] = vs['data_reduction']
-            vp[0]['total'] = vs['total']
-            vp[0]['shared_space'] = vs['shared_space']
-            vp[0]['thin_provisioning'] = vs['thin_provisioning']
-            vp[0]['size'] = vs['size']
+            vp[0].update(vs)
             
             # dump total document into json
             s = json.dumps(vp[0])
