@@ -142,9 +142,16 @@ class PureCollector(object):
         vl = self._ps_client.list_volumes()
 
         for v in vl:
+            # get real-time perf stats per volume
             vp = self._ps_client.get_volume(v['name'], action='monitor')
             vp[0]['array_name'] = self._array_name
             vp[0]['array_id'] = self._array_id
             vp[0][PureCollector._timeofquery_key] = timeofquery_str
+            
+            # get space stats per volume and append 
+            vs = self._ps_client.get_volume(v['name'], space=True)
+            vp[0].update(vs)
+            
+            # dump total document into json
             s = json.dumps(vp[0])
             self._es_client.index(index=vols_index, doc_type='volperf', body=s, ttl=self._data_ttl)
