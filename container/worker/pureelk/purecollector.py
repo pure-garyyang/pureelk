@@ -10,6 +10,7 @@ volmap = """
         "volperf":{
             "properties":{
                 "name":{"type":"string","index":"not_analyzed"},
+                "vol_name":{"type":"string","index":"not_analyzed"},
                 "array_name":{"type":"string","index":"not_analyzed"},
                 "array_id":{"type":"string","index":"not_analyzed"}
             },
@@ -109,6 +110,8 @@ class PureCollector(object):
         ap = self._ps_client.get(action='monitor')
         ap[0]['array_name'] = self._array_name
         ap[0]['array_id'] = self._array_id
+        # add an array name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+        ap[0]['array_name_a'] = self._array_name
 
         # now get the information for space
         sp = self._ps_client.get(space=True)
@@ -125,6 +128,8 @@ class PureCollector(object):
         for am in al:
             am['array_name'] = self._array_name
             am['array_id'] = self._array_id
+            # add an array name  that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+            am['array_name_a'] = self._array_name
             am[PureCollector._timeofquery_key] = timeofquery_str
             s = json.dumps(am)
             self._es_client.index(index=msgs_index, doc_type='arraymsg', id=am['id'], body=s, ttl=self._data_ttl)
@@ -134,6 +139,8 @@ class PureCollector(object):
         for am in al:
             am['array_name'] = self._array_name
             am['array_id'] = self._array_id
+            # add an array name  that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+            am['array_name_a'] = self._array_name
             am[PureCollector._timeofquery_key] = timeofquery_str
             s = json.dumps(am)
             self._es_client.index(index=audit_index, doc_type='auditmsg', id=am['id'], body=s, ttl=self._data_ttl)
@@ -146,6 +153,12 @@ class PureCollector(object):
             vp = self._ps_client.get_volume(v['name'], action='monitor')
             vp[0]['array_name'] = self._array_name
             vp[0]['array_id'] = self._array_id
+            vp[0]['vol_name'] = v['name']
+            
+            # add an array name and a volume name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+            vp[0]['vol_name_a'] = v['name']
+            vp[0]['array_name_a'] = self._array_name
+            
             vp[0][PureCollector._timeofquery_key] = timeofquery_str
             
             # get space stats per volume and append 
