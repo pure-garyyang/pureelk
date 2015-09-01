@@ -95,6 +95,7 @@ class PureCollector(object):
         vols_index = "pureelk-vols-{}".format(date_str)
         msgs_index = "pureelk-msgs-{}".format(date_str)
         audit_index = "pureelk-audit-{}".format(date_str)
+        global_arrays_index = "pureelk-global-arrays"
 
         # ignore indices already exists error (code 409)
         self._es_client.indices.create(index=vols_index, body=volmap, ignore=[400, 409])
@@ -102,6 +103,8 @@ class PureCollector(object):
         self._es_client.indices.create(index=msgs_index, body=msgmap, ignore=[400, 409])
         self._es_client.indices.create(index=audit_index, body=auditmap, ignore=[400, 409])
 
+        #special non-time series stash of array documents
+        self._es_client.indices.create(index=global_arrays_index, body=arraymap, ignore=[400, 409])
 
         # all metrics collected in the same cycle are posted to Elasticsearch with same timestamp
         timeofquery_str = utcnow.isoformat()
@@ -123,6 +126,10 @@ class PureCollector(object):
         s = json.dumps(ap[0])
         self._es_client.index(index=arrays_index, doc_type='arrayperf', body=s, ttl=self._data_ttl)
 
+        # non-timeseries array docs, uses id to bring es versioning into play
+        self._es_client.index(index=global_arrays_index, doc_type='arrayperf', body=s, id=self._array_id, ttl=self._data_ttl)
+
+
         # index alert messages
         al = self._ps_client.list_messages(recent='true')
         for am in al:
@@ -134,7 +141,7 @@ class PureCollector(object):
             s = json.dumps(am)
             self._es_client.index(index=msgs_index, doc_type='arraymsg', id=am['id'], body=s, ttl=self._data_ttl)
 
-        # index alert messages
+        # index audit log entries
         al = self._ps_client.list_messages(audit='true')
         for am in al:
             am['array_name'] = self._array_name
