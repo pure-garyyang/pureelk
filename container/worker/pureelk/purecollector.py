@@ -122,6 +122,14 @@ class PureCollector(object):
 
         # copy items into the new dictionary
         ap[0].update(nd)
+
+        # add some pre-calc'd fields so Kibana doesn't need scripted fields. That makes install less
+        # one button if we include them
+        cap = long(ap[0]['capacity'])
+        tot = long(ap[0]['total'])
+        ap[0]['free'] = cap - tot
+        ap[0]['percent_free'] = ( cap - tot ) / cap
+
         ap[0][PureCollector._timeofquery_key] = timeofquery_str
         s = json.dumps(ap[0])
         self._es_client.index(index=arrays_index, doc_type='arrayperf', body=s, ttl=self._data_ttl)
