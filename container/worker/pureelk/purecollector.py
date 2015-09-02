@@ -128,7 +128,7 @@ class PureCollector(object):
         cap = long(ap[0]['capacity'])
         tot = long(ap[0]['total'])
         ap[0]['free'] = cap - tot
-        ap[0]['percent_free'] = ( cap - tot ) / cap
+        ap[0]['percent_free'] = (float(cap) - float(tot)) / float(cap)
 
         ap[0][PureCollector._timeofquery_key] = timeofquery_str
         s = json.dumps(ap[0])
