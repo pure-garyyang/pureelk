@@ -130,6 +130,7 @@ class PureCollector(object):
         msgs_index = "pureelk-msgs-{}".format(date_str)
         audit_index = "pureelk-audit-{}".format(date_str)
         global_arrays_index = "pureelk-global-arrays"
+        global_vols_index = "pureelk-global-vols"
 
         # ignore indices already exists error (code 409)
         self._es_client.indices.create(index=vols_index, body=volmap, ignore=[400, 409])
@@ -140,8 +141,9 @@ class PureCollector(object):
         self._es_client.indices.create(index=hgroups_index, body=hgroupmap, ignore=[400, 409])
 
 
-        #special non-time series stash of array documents
+        #special non-time series stash of array/vol documents
         self._es_client.indices.create(index=global_arrays_index, body=arraymap, ignore=[400, 409])
+        self._es_client.indices.create(index=global_vols_index, body=volmap, ignore=[400, 409])
 
         # all metrics collected in the same cycle are posted to Elasticsearch with same timestamp
         timeofquery_str = utcnow.isoformat()
@@ -236,11 +238,17 @@ class PureCollector(object):
 
             vp[0]['host_name'] = hs
             vp[0]['hgroup_name'] = hgs
+
+            # get the serial number for this volume to use as a unique global id
+            vp1 = self._ps_client.get_volume(v['name'])
+            vp[0]['serial'] = vp1['serial']
             
             # dump total document into json
             s = json.dumps(vp[0])
             self._es_client.index(index=vols_index, doc_type='volperf', body=s, ttl=self._data_ttl)
 
+            # non-timeseries volume docs, uses id to bring es versioning into play, uses serial number as global ID
+            self._es_client.index(index=global_vols_index, doc_type='volperf', body=s, id=vp1['serial'], ttl=self._data_ttl)
 
         # get list of hosts
         hl = self._ps_client.list_hosts()
