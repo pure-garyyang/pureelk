@@ -20,6 +20,38 @@ volmap = """
 }
 """
 
+hostmap = """
+{
+    "mappings" : {
+        "hostdoc":{
+            "properties":{
+                "name":{"type":"string","index":"not_analyzed"},
+                "host_name":{"type":"string","index":"not_analyzed"},
+                "array_name":{"type":"string","index":"not_analyzed"},
+                "array_id":{"type":"string","index":"not_analyzed"}
+            },
+            "_ttl" : { "enabled" : true }
+        }
+    }
+}
+"""
+
+hgroupmap = """
+{
+    "mappings" : {
+        "hgroupdoc":{
+            "properties":{
+                "name":{"type":"string","index":"not_analyzed"},
+                "hgroup_name":{"type":"string","index":"not_analyzed"},
+                "array_name":{"type":"string","index":"not_analyzed"},
+                "array_id":{"type":"string","index":"not_analyzed"}
+            },
+            "_ttl" : { "enabled" : true }
+        }
+    }
+}
+"""
+
 arraymap = """
 {
     "mappings" : {
@@ -93,6 +125,8 @@ class PureCollector(object):
         date_str = utcnow.strftime('%Y-%m-%d')
         arrays_index = "pureelk-arrays-{}".format(date_str)
         vols_index = "pureelk-vols-{}".format(date_str)
+        hosts_index = "pureelk-hosts-{}".format(date_str)
+        hgroups_index = "pureelk-hgroup-{}".format(date_str)
         msgs_index = "pureelk-msgs-{}".format(date_str)
         audit_index = "pureelk-audit-{}".format(date_str)
         global_arrays_index = "pureelk-global-arrays"
@@ -102,6 +136,9 @@ class PureCollector(object):
         self._es_client.indices.create(index=arrays_index, body=arraymap, ignore=[400, 409])
         self._es_client.indices.create(index=msgs_index, body=msgmap, ignore=[400, 409])
         self._es_client.indices.create(index=audit_index, body=auditmap, ignore=[400, 409])
+        self._es_client.indices.create(index=hosts_index, body=hostmap, ignore=[400, 409])
+        self._es_client.indices.create(index=hgroups_index, body=hgroupmap, ignore=[400, 409])
+
 
         #special non-time series stash of array documents
         self._es_client.indices.create(index=global_arrays_index, body=arraymap, ignore=[400, 409])
@@ -183,3 +220,40 @@ class PureCollector(object):
             # dump total document into json
             s = json.dumps(vp[0])
             self._es_client.index(index=vols_index, doc_type='volperf', body=s, ttl=self._data_ttl)
+
+
+        # get list of hosts
+        hl = self._ps_client.list_hosts()
+
+        for h in hl:
+            # get real-time perf stats per host
+            hp = self._ps_client.get_host(h['name'], space=True)
+            hp['array_name'] = self._array_name
+            hp['array_id'] = self._array_id
+            hp['host_name'] = h['name']
+            # add an array name and a volume name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+            hp['host_name_a'] = h['name']
+            hp['array_name_a'] = self._array_name
+            hp[PureCollector._timeofquery_key] = timeofquery_str
+
+            # dump total document into json
+            s = json.dumps(hp)
+            self._es_client.index(index=hosts_index, doc_type='hostdoc', body=s, ttl=self._data_ttl)
+
+        # get list of host groups
+        hl = self._ps_client.list_hgroups()
+
+        for hg in hl:
+            # get real-time perf stats per host group
+            hgp = self._ps_client.get_hgroup(hg['name'], space=True)
+            hgp['array_name'] = self._array_name
+            hgp['array_id'] = self._array_id
+            hgp['hgroup_name'] = hg['name']
+            # add an array name and a volume name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
+            hgp['hgroup_name_a'] = hg['name']
+            hgp['array_name_a'] = self._array_name
+            hgp[PureCollector._timeofquery_key] = timeofquery_str
+
+           # dump total document into json
+            s = json.dumps(hgp)
+            self._es_client.index(index=hgroups_index, doc_type='hgroupdoc', body=s, ttl=self._data_ttl)
