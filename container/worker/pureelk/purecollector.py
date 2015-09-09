@@ -216,6 +216,26 @@ class PureCollector(object):
             # get space stats per volume and append 
             vs = self._ps_client.get_volume(v['name'], space=True)
             vp[0].update(vs)
+
+            # get the host and host group connections per volume
+            # create a large string that we are hoping elasticsearch
+            # will tokenize and help us match
+            hs =""
+            hgs=""
+            hp = self._ps_client.list_volume_private_connections(v['name'])
+            for h in hp:
+                hs += h['host']
+                hs += ' '
+
+            hp = self._ps_client.list_volume_shared_connections(v['name'])
+            for hg in hp:
+                hs += hg['host']
+                hs += ' '
+                hgs += hg['hgroup']
+                hgs += ' '
+
+            vp[0]['host_name'] = hs
+            vp[0]['hgroup_name'] = hgs
             
             # dump total document into json
             s = json.dumps(vp[0])
@@ -231,6 +251,7 @@ class PureCollector(object):
             hp['array_name'] = self._array_name
             hp['array_id'] = self._array_id
             hp['host_name'] = h['name']
+            hp['hgroup_name'] = h['hgroup']
             # add an array name and a volume name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
             hp['host_name_a'] = h['name']
             hp['array_name_a'] = self._array_name
