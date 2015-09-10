@@ -207,7 +207,7 @@ class PureCollector(object):
             vp = self._ps_client.get_volume(v['name'], action='monitor')
             vp[0]['array_name'] = self._array_name
             vp[0]['array_id'] = self._array_id
-            vp[0]['vol_name'] = v['name']
+            vp[0]['vol_name'] = self._array_name + ':' + v['name']
             
             # add an array name and a volume name that elasticsearch can tokenize ( i.e. won't be present in mappings above )
             vp[0]['vol_name_a'] = v['name']
