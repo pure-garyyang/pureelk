@@ -283,6 +283,14 @@ class PureCollector(object):
             hgp['array_name_a'] = self._array_name
             hgp[PureCollector._timeofquery_key] = timeofquery_str
 
+            # include a reference to all hosts in the group at the time of this call
+            hgl = self._ps_client.get_hgroup(hg['name'])
+            hls = ""
+            for h in hgl['hosts']:
+                hls += h
+                hls += ' '
+            hgp['host_name'] = hls
+
            # dump total document into json
             s = json.dumps(hgp)
             self._es_client.index(index=hgroups_index, doc_type='hgroupdoc', body=s, ttl=self._data_ttl)
