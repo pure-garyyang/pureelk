@@ -70,7 +70,7 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
 
 
                     $scope.resetNewArray = function() {
-                        $scope.newarray = { data_ttl : "90" };
+                        $scope.newarray = { data_ttl : "90", frequency: "60" };
                         $scope.newarrayError = {};
                     }
                     $scope.resetNewArray();

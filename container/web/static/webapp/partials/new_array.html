@@ -40,6 +40,17 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label for="collectionInterval">Collection interval:</label>
+                         <select class="form-control" id="collectionInterval" ng-model="newarray.frequency">
+                            <option value="60">60 seconds</option>
+                            <option value="120">120 seconds</option>
+                            <option value="180">180 seconds</option>
+                            <option value="240">240 seconds</option>
+                            <option value="300">300 seconds</option>
+                         </select>
+                    </div>
+
                     <div class="alert alert-danger" role="alert" ng-show="newarrayError.message">{{ newarrayError.message }}</div>
 
                 </div>
