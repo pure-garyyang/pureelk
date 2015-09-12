@@ -14,8 +14,8 @@
     line-height: 33px;
     margin: 7px 0;
     overflow: hidden;
-    padding: 0 40px;
-    text-align: center;
+    padding: 0 10px;
+    text-align: left;
     text-overflow: ellipsis;
 }
 
@@ -56,9 +56,15 @@
     top: 1px;
 }
 
+.card-edit-array-btn {
+    position: absolute;
+    right: 62px;
+    top: 1px;
+}
+
 .card-change-array-btn {
     position: absolute;
-    left: 0px;
+    right: 104px;
     top: 1px;
 }
 
@@ -112,6 +118,11 @@
     font-size: 60px;
     display: block;
     text-align: center;
+    color: #EA9839;
+}
+
+.glyphicon.extra-large:hover {
+    color:orange
 }
 
 .navbar-purestorage {
@@ -119,3 +130,4 @@
     color:#ffffff;
     border-radius:0;
 }
+

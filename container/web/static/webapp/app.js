@@ -28,6 +28,11 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                          url: 'rest/arrays/',
                          headers: {'Content-Type': 'application/json'}
                      },
+                     updateArray: {
+                         method: 'PUT',
+                         url: 'rest/arrays/:arrayid',
+                         headers: {'Content-Type': 'application/json'}
+                     },
                      changeArrayCollectionStatus: {
                          method: 'PUT',
                          url: 'rest/arrays/:arrayid'
@@ -73,7 +78,10 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         $scope.newarray = { data_ttl : "90", frequency: "60" };
                         $scope.newarrayError = {};
                     }
-                    $scope.resetNewArray();
+
+                    $scope.setupArrayAdd = function() {
+                        $scope.resetNewArray();
+                    }
 
                     $scope.addArray = function () {
                         $log.info('Adding array: ' + $scope.newarray.host);
@@ -89,10 +97,10 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         }, function(error) {
                             if (error.data.message.indexOf("Invalid argument") > -1) {
                                 $scope.newarrayError.message = "Unreachable FlashArray hostname, please try again."
-                            } else if (error.data.message.indexOf("invalid credentials" > -1)) {
+                            } else if (error.data.message.indexOf("invalid credentials") > -1) {
                                 $scope.newarrayError.message = "Invalid credentials, please try again."
                             } else {
-                                $scope.newarrayError.message = "Unknown error: " + error.message;
+                                $scope.newarrayError.message = error.data.message;
                             }
                         });
                     }
@@ -123,4 +131,48 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                     $scope.kibanaURL =
                         $location.protocol() + "://" + $location.host() + ":5601/";
 
+                    $scope.setupArrayEdit = function(flasharray) {
+                        // set up a copy of the array to bind into the "edit array" view.
+                        var editarray = $.extend(true, {}, flasharray);
+
+                        // The backend doesn't persist password. We just set the array id there as a fake password
+                        editarray.password = flasharray.id;
+                        if (!!flasharray.data_ttl)
+                        {
+                            // Need to trim away the day unit string "d".
+                            editarray.data_ttl = flasharray.data_ttl.substring(0, flasharray.data_ttl.length - 1);
+                        }
+
+                        $scope.arrayEdit = {
+                            original: flasharray,
+                            edit: editarray
+                        };
+
+                        $scope.editarrayError = {};
+                    }
+
+                    $scope.updateArray = function() {
+                        $log.info('Updating array: ' + $scope.arrayEdit.original.id);
+                        var original = $scope.arrayEdit.original;
+                        var edit = JSON.parse(JSON.stringify($scope.arrayEdit.edit));
+
+                        edit.data_ttl = edit.data_ttl + 'd';
+
+                        // If username or password didn't change, we skip them so that server will not refresh the api token.
+                        // Note that we use id to fake the password when setting up the edit dialog.
+                        if (edit.username == original.username && edit.password == original.id)
+                        {
+                            delete edit.username;
+                            delete edit.password;
+                        }
+
+                        PureElkRestService.updateArray({arrayid: edit.id}, angular.toJson(edit))
+                            .$promise.then(function(data){
+                                // success handler
+                                $('#modalEditArray').modal('hide');
+                                $scope.reloadArray();
+                            }, function(error) {
+                                $scope.editarrayError.message = error.data.message;
+                            });
+                    }
                 });

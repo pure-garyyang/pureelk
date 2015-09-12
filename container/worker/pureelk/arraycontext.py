@@ -12,9 +12,9 @@ class ArrayContext(object):
     PURITY_VERSION = "purity_version"
 
     # collection config
-    FREQUENCY = "frequency"
+    FREQUENCY = "frequency" # In seconds
     ENABLED = "enabled"
-    DATA_TTL = "data_ttl"
+    DATA_TTL = "data_ttl"   # This follows the elastic search spec, e.g. "90d" is 90 days.
 
     # Execution values coming from job processing
     TASK_TIMESTAMP = "task_timestamp"

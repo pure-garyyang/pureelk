@@ -1,8 +1,12 @@
 <!-- Main jumbotron for a primary marketing message or call to action -->
 <div class="jumbotron">
-    <div class="container">
-        <h1>Hello, PureELK user!</h1>
-        <p>Add some FlashArrays below and see their metrics in Kibana.</p>
+    <div class="container" style="
+            background-image: url(img/flash-array-m.png);
+            background-position: right bottom;
+            background-size: 40%;
+            background-repeat: no-repeat">
+        <h1>Welcome to PureELK!</h1>
+        <p>Add FlashArrays below and see their metrics in Kibana.</p>
         <p><a class="btn btn-primary btn-lg" href="{{::kibanaURL}}" role="button">Go to Kibana &raquo;</a></p>
     </div>
 </div>
@@ -12,7 +16,7 @@
 
     <div class="row placeholders">
 
-        <div class="col-xs-6 col-sm-3" ng-repeat="flasharray in flasharrays track by flasharray.id">
+        <div class="col-xs-6 col-sm-4" ng-repeat="flasharray in flasharrays track by flasharray.id">
             <div ng-include="'webapp/partials/status_card.html'"></div>
         </div>
 
@@ -20,14 +24,14 @@
             <div class="height-adjust">
                 <div class="thumbnail">
                     <div class="statuscard">
-                        <span class="glyphicon glyphicon-plus extra-large" aria-hidden="true" data-toggle="modal" data-target="#modalNewArray"></span>
+                        <span class="glyphicon glyphicon-plus-sign extra-large" aria-hidden="true" data-toggle="modal" data-target="#modalNewArray" ng-click="setupArrayAdd()"></span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div ng-include="'webapp/partials/new_array.html'"></div>
-
+        <div ng-include="'webapp/partials/edit_array.html'"></div>
     </div>
 
 </div>

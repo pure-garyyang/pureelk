@@ -49,7 +49,6 @@ def add_array(json_body=None):
             make_error(ErrorCodes.ArrayError.value, "Error encountered when connecting to the array: {}".format(e)),
             400)
 
-    del json_body[USERNAME]
     del json_body[PASSWORD]
     json_body.update({
         ArrayContext.API_TOKEN: apitoken,
@@ -59,6 +58,17 @@ def add_array(json_body=None):
     })
 
     store = Store(array_config_path(), current_app.logger)
+
+    existing_arrays = store.load_arrays()
+
+    if array_id in existing_arrays:
+        return make_rest_response(
+            make_error(
+                ErrorCodes.ArrayAlreadyExists.value,
+                "Array of the same id already exists with the name '{}'.".format(
+                    existing_arrays[array_id].name)),
+            409)
+
     array = ArrayContext()
     array.update_config_json(json_body)
     store.save_array_config(array)
@@ -108,11 +118,11 @@ def update_array(array_id, json_body=None):
                            "Array id mismatch. Original id = {}, new id fetched from array = {}".format(array.id, array_id)),
                 400)
 
-        del json_body[USERNAME]
         del json_body[PASSWORD]
         json_body.update({
             ArrayContext.API_TOKEN: apitoken,
             ArrayContext.NAME:  array_name,
+            ArrayContext.PURITY_VERSION: purity_version
         })
 
     array.update_config_json(json_body)

@@ -1,0 +1,67 @@
+<!-- Modal -->
+<div class="modal fade" id="modalEditArray" tabindex="-1" role="dialog"
+     aria-labelledby="Edit FlashArray">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form ng-submit="updateArray()">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h2 class="modal-title" id="myModalLabel">Edit FlashArray</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputFlashArrayHostname">FlashArray Hostname</label>
+                        <input type="text" class="form-control" id="inputFlashArrayHostname"
+                               ng-model="arrayEdit.edit.host"
+                               placeholder="FlashArray Hostname">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputUsername">Username</label>
+                        <input type="text" class="form-control" id="inputUsername"
+                               ng-model="arrayEdit.edit.username"
+                               placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword">Password</label>
+                        <input type="password" class="form-control" id="inputPassword"
+                               ng-model="arrayEdit.edit.password"
+                               placeholder="Password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputTTL">Metric Time-To-Live</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="inputTTL"
+                                   ng-model="arrayEdit.edit.data_ttl"
+                                   value="90">
+                            <div class="input-group-addon">days</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collectionInterval">Collection interval:</label>
+                         <select class="form-control" id="collectionInterval" ng-model="arrayEdit.edit.frequency">
+                            <option value="60">60 seconds</option>
+                            <option value="120">120 seconds</option>
+                            <option value="180">180 seconds</option>
+                            <option value="240">240 seconds</option>
+                            <option value="300">300 seconds</option>
+                         </select>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert" ng-show="editarrayError.message">{{ editarrayError.message }}</div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

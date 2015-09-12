@@ -8,4 +8,5 @@ class ErrorCodes(Enum):
     ArrayNotFound = "array-not-found"
     ArrayError = "array-error"
     ArrayIdMismatch = "array-id-mismatch"
+    ArrayAlreadyExists = "array-already-exists"
 
