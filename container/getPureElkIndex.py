@@ -10,7 +10,7 @@ if __name__ == '__main__':
     # create a connection to the Elasticsearch database
     client = Elasticsearch(['pureelk-elasticsearch:9200'], retry_on_timeout=True)
 
-    if client.indices.exists(index='pureelk-global-arrays'):
+    if client.exists(index='.kibana', doc_type='index-pattern',id='pureelk-global-arrays'):
         sys.exit(0)
     else:
         sys.exit(1)
