@@ -12,6 +12,7 @@ RUN pip install Flask
 RUN pip install elasticsearch
 RUN pip install python-dateutil
 RUN pip install enum34
+RUN npm install elasticdump
 
 ENV target_folder /pureelk
 ADD container/ $target_folder

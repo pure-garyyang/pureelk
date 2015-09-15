@@ -20,6 +20,18 @@ celery -A pureelk.worker worker --loglevel=info --config workerconfig --workdir 
 # Export the python modules from worker and web folder
 export PYTHONPATH=$PYTHONPATH:/pureelk/web/:/pureelk/worker/
 
+# check for existing pureelk indices in the elasticsearch linked container
+# if none exist populate the kibana index with pureelk index patterns and kibana dashboard
+# user just needs to navigate to kibana and start monitoring
+
+python ./getPureElkIndex.py
+if [ $? -eq 1 ]
+    then
+        # no pureelk-global-arrays index found, run elasticdump to import new index patterns and kibana dashboards
+        # so users has a one-button experience
+        /node_modules/elasticdump/bin/elasticdump --input=/pureelk/elasticdump_pureelk --output=http://elasticsearch:9200/.kibana
+fi
+
 # Start the Flask web-site
 python web/app.py --array-configs=$CONF_DIR --logfile=/var/log/pureelk/rest.log &
 
