@@ -226,15 +226,18 @@ class PureCollector(object):
             hgs=""
             hp = self._ps_client.list_volume_private_connections(v['name'])
             for h in hp:
-                hs += h['host']
-                hs += ' '
+                if h['host']:
+                    hs += h['host']
+                    hs += ' '
 
             hp = self._ps_client.list_volume_shared_connections(v['name'])
             for hg in hp:
-                hs += hg['host']
-                hs += ' '
-                hgs += hg['hgroup']
-                hgs += ' '
+                if hg['host']:
+                    hs += hg['host']
+                    hs += ' '
+                if hg['hgroup']:
+                    hgs += hg['hgroup']
+                    hgs += ' '
 
             vp[0]['host_name'] = hs
             vp[0]['hgroup_name'] = hgs
