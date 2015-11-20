@@ -68,7 +68,7 @@ start_containers() {
     if [ $? -eq 1 ];
     then
         print_warn "$PUREELK_ES does not exist yet, run a new one..."
-        docker run -d -P --name=$PUREELK_ES -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch
+        docker run -d -P --name=$PUREELK_ES -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
     elif [ "$RUNNING" == "false" ];
     then
         docker start $PUREELK_ES
