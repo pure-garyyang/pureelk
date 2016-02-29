@@ -16,6 +16,7 @@ RUN npm install elasticdump
 
 ENV target_folder /pureelk
 ADD container/ $target_folder
+ADD conf/logrotate-pureelk.conf /etc/logrotate.d/pureelk
 WORKDIR $target_folder
 
 RUN chmod +x start.sh
