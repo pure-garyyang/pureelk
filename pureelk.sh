@@ -13,6 +13,9 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+PUREELK_SCRIPT_URL=https://raw.githubusercontent.com/pureelk/pureelk/master/pureelk.sh
+PUREELK_SCRIPT_LOCALPATH=$PUREELK_PATH/pureelk.sh
+
 print_help() {
     echo "Usage: $0 {help|install|start|stop|attach|delete}"
 }
@@ -23,6 +26,18 @@ print_info() {
 
 print_warn() {
     printf "${YELLOW}$1${NC}\n"
+}
+
+config_upstart() {
+    curl -o ${PUREELK_SCRIPT_LOCALPATH} ${PUREELK_SCRIPT_URL}
+    chmod u+x ${PUREELK_SCRIPT_LOCALPATH}
+
+cat > /etc/init/pureelk.conf << End-of-upstart
+start on runlevel [2345]
+stop on [!2345]
+task
+exec ${PUREELK_SCRIPT_LOCALPATH} start
+End-of-upstart
 }
 
 install() {
@@ -58,6 +73,8 @@ install() {
     if [ ! -d "$PUREELK_LOG" ]; then
         sudo mkdir -p $PUREELK_LOG
     fi
+
+    config_upstart
    
     print_info "Install completed."
 }
@@ -68,7 +85,7 @@ start_containers() {
     if [ $? -eq 1 ];
     then
         print_warn "$PUREELK_ES does not exist yet, run a new one..."
-        docker run -d -P --name=$PUREELK_ES -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch
+        docker run -d -P --name=$PUREELK_ES -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
     elif [ "$RUNNING" == "false" ];
     then
         docker start $PUREELK_ES
