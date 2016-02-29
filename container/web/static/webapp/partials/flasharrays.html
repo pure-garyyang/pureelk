@@ -7,6 +7,7 @@
             background-repeat: no-repeat">
         <h1>Welcome to PureELK!</h1>
         <p>Add FlashArrays below and see their metrics in Kibana.</p>
+        <p>Add Pure Monitors below to alert on array metrics</p>
         <p><a class="btn btn-primary btn-lg" href="{{::kibanaURL}}" role="button">Go to Kibana &raquo;</a></p>
     </div>
 </div>
@@ -20,18 +21,41 @@
             <div ng-include="'webapp/partials/status_card.html'"></div>
         </div>
 
+        <div class="col-xs-6 col-sm-4" ng-repeat="monitor in puremonitors track by monitor.id">
+            <div ng-include="'webapp/partials/monitor_status_card.html'"></div>
+        </div>
+
         <div class="col-xs-6 col-sm-3">
             <div class="height-adjust">
                 <div class="thumbnail">
                     <div class="statuscard">
+                        <div class="card-title">
+                            <span>Add Pure FlashArray</span>
+                        </div>
                         <span class="glyphicon glyphicon-plus-sign extra-large" aria-hidden="true" data-toggle="modal" data-target="#modalNewArray" ng-click="setupArrayAdd()"></span>
                     </div>
                 </div>
             </div>
         </div>
 
+        <div class="col-xs-6 col-sm-3">
+            <div class="height-adjust">
+                <div class="thumbnail">
+                    <div class="statuscard">
+                        <div class="card-title">
+                            <span>Add Pure Monitor</span>
+                        </div>
+                        <span class="glyphicon glyphicon-cog extra-large" aria-hidden="true" data-toggle="modal" data-target="#modalNewMonitor" ng-click="setupMonitorAdd()"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div ng-include="'webapp/partials/new_array.html'"></div>
         <div ng-include="'webapp/partials/edit_array.html'"></div>
+        <div ng-include="'webapp/partials/new_monitor.html'"></div>
+        <div ng-include="'webapp/partials/edit_monitor.html'"></div>
     </div>
 
 </div>

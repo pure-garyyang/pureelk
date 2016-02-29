@@ -11,9 +11,10 @@ logger = get_task_logger(__name__)
 class Context(object):
     def __init__(self, path):
         self._array_contexts = {}
+        self._monitor_contexts = {}
         self._store = Store(path, logger)
 
-    def prepare(self):
+    def prepare_arrays(self):
         new_arrays = self._store.load_arrays()
         arrays_not_refreshed = self._array_contexts.keys()
 
@@ -38,7 +39,38 @@ class Context(object):
         logger.info("Arrays for collections = {}".format(self.array_contexts.keys()))
         self._store.save_array_states(self.array_contexts.values())
 
+    def prepare_monitors(self):
+        new_monitors = self._store.load_monitors()
+        monitors_not_refreshed = self._monitor_contexts.keys()
+
+        logger.info("Reloaded configs. existing monitors are {}, new monitors are {}".format(
+            monitors_not_refreshed,
+            new_monitors.keys()))
+
+        # Update the current execution context based on the  config store.
+        for new_monitor in new_monitors.values():
+            if new_monitor.id in self._monitor_contexts:
+                # If the monitor already exists, we update its config.
+                self._monitor_contexts[new_monitor.id].update_config_json(new_monitor.get_config_json())
+                monitors_not_refreshed.remove(new_monitor.id)
+            else:
+                # If the monitor does not exist, we add it into the monitor_contexts.
+                self._monitor_contexts[new_monitor.id] = new_monitor
+
+        # For monitors no longer exists in the config store, we remove it from the context
+        for monitor_id in monitors_not_refreshed:
+            del self._monitor_contexts[monitor_id]
+
+        logger.info("monitors = {}".format(self._monitor_contexts.keys()))
+        self._store.save_monitor_states(self._monitor_contexts.values())
+
+
 
     @property
     def array_contexts(self):
         return self._array_contexts
+
+    @property
+    def monitor_contexts(self):
+        return self._monitor_contexts
+

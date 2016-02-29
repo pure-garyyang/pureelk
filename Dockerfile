@@ -10,6 +10,7 @@ RUN pip install purestorage
 RUN pip install gevent
 RUN pip install Flask
 RUN pip install elasticsearch
+RUN pip install elasticsearch_dsl
 RUN pip install python-dateutil
 RUN pip install enum34
 RUN npm install elasticdump

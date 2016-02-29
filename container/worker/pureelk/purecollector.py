@@ -2,6 +2,11 @@ from celery.utils.log import get_task_logger
 import json
 import datetime
 
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search, Q, A
+from elasticsearch_dsl.query import MultiMatch 
+
+from pureelk.monitorcontext import MonitorContext
 
 # setup the mappings for the index
 volmap = """
@@ -230,12 +235,15 @@ class PureCollector(object):
                     hs += h['host']
                     hs += ' '
 
+            hglist = []
             hp = self._ps_client.list_volume_shared_connections(v['name'])
             for hg in hp:
                 if hg['host']:
                     hs += hg['host']
                     hs += ' '
-                if hg['hgroup']:
+                if hg['hgroup'] and hg['hgroup'] not in hglist:
+                    # only include unique host group names 
+                    hglist.append(hg['hgroup'])
                     hgs += hg['hgroup']
                     hgs += ' '
 
@@ -297,3 +305,185 @@ class PureCollector(object):
            # dump total document into json
             s = json.dumps(hgp)
             self._es_client.index(index=hgroups_index, doc_type='hgroupdoc', body=s, ttl=self._data_ttl)
+
+
+class PureArrayMonitor(object):
+    _timeofquery_key = 'timeofquery'
+    
+
+    # init basic elasticsearch client and monitor context
+    def __init__(self, es_client, monitor_context):
+        self._es_client = es_client;
+        self.logger = get_task_logger(__name__)
+        self._monitor = monitor_context
+        self._utcnow = datetime.datetime.utcnow()
+        self._date_str = self._utcnow.strftime('%Y-%m-%d')
+        self._msgs_index = "pureelk-msgs-{}".format(self._date_str)
+        self._timeofquery_str = self._utcnow.isoformat()
+
+    # run the query for the monitor and process results
+    def monitor(self):
+
+        self.logger.info("Running PureArrayMonitor")
+
+        #create a Search object
+        s = Search(using=self._es_client)
+        s = s.index("pureelk-arrays-*")
+        s = s.query(Q("wildcard", array_name=self._monitor.array_name))
+
+        # apply time window filter on query
+        s = s.filter('range',timeofquery={'lt':'now','gte': 'now-{}'.format(self._monitor.window)})
+
+        # now apply the metric we want to monitor for
+        s = s.query('range',**{ self._monitor.metric : { self._monitor.compare: self._monitor.value} })
+
+        #now bucketize the results to make so we can access 'hits' per object
+        a = A('terms', field='array_name')
+        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}], _source=['array_id','array_name','timeofquery'])
+        s.aggs.bucket('per_array_name',a).bucket('top_array_hits', t)
+
+        # dump query to log
+        self.logger.info("Query executed {} ".format(s.to_dict()))
+
+        # execute the query and check for relevant hits
+        r = s.execute()
+
+        # loop through buckets and see if anyone has enough "hits"
+        for b in r.aggregations.per_array_name.buckets:
+            if b['doc_count'] >= self._monitor.hits:
+                # this means that monitor query had a number of hits over the threshold established by the user
+                self.logger.info("PureArrayMonitor had {} hits".format(b['doc_count']))
+
+                # debug log the bucket contents
+                self.logger.info(b)
+
+                 # create a "alert document" and deposit it in correct index
+                self._user_defined_message(b)
+
+    # create a new document and insert into messages
+    # index of pureelk, customer will be able to see it 
+    # in normal location for alerts
+    def _user_defined_message(self, bucket):
+        # create a 'message' document that will look like a array_message document
+        am = {}
+        # extract array_from document in the top_hits bucket 
+        am['array_name'] = bucket['top_array_hits']['hits']['hits'][0]['_source']['array_name']
+        am['array_id'] = bucket['top_array_hits']['hits']['hits'][0]['_source']['array_id']
+        am['array_name_a'] = am['array_name']
+        am[PureArrayMonitor._timeofquery_key] = self._timeofquery_str
+        am['category'] = 'user_defined'
+        am['current_severity'] = self._monitor.severity
+        am['actual'] = "{} Matching Samples".format(bucket['doc_count'])
+        am['details'] = "User defined alert message for {}".format(bucket['key'])
+        am['event'] = "Monitor triggered"
+        am['expected'] = "{} not {} {}".format(self._monitor.metric, self._monitor.compare, self._monitor.value)
+        am['component_name'] = "array.user_defined"
+        ms = json.dumps(am)
+        res = self._es_client.index(index=self._msgs_index, doc_type='arraymsg', body=ms, ttl=self._monitor.data_ttl)
+
+
+
+class PureVolumeMonitor(object):
+    _timeofquery_key = 'timeofquery'
+
+    # init basic elasticsearch client and monitor context
+    def __init__(self, es_client, monitor_context):
+        self._es_client = es_client;
+        self.logger = get_task_logger(__name__)
+        self._monitor = monitor_context
+        self._utcnow = datetime.datetime.utcnow()
+        self._date_str = self._utcnow.strftime('%Y-%m-%d')
+        self._msgs_index = "pureelk-msgs-{}".format(self._date_str)
+        self._timeofquery_str = self._utcnow.isoformat()
+
+    # run the query for the monitor and process results
+    def monitor(self):
+
+        self.logger.info("Running PureVolumeMonitor")
+
+        # create a Search object
+        s = Search(using=self._es_client)
+        s = s.index("pureelk-vols-*")
+        # create an "AND" query to make sure if someone specified a specific volume on a specific
+        # array it will work. ES wildcard will make this super powerful
+        # I am consciously not using "vol_name" because it also includes the array name
+        # I use vol_name below when I want unique buckets for hits
+        s = s.query(Q("wildcard", array_name=self._monitor.array_name) & Q("wildcard", vol_name=self._monitor.vol_name))
+
+        # apply time window filter on query
+        s = s.filter('range',timeofquery={'lt':'now','gte': 'now-{}'.format(self._monitor.window)})
+
+        # now apply the metric we want to monitor for
+        s = s.query('range',**{ self._monitor.metric : { self._monitor.compare: self._monitor.value} })
+
+        # now bucketize the results to make it so we can access 'hits' per volume
+        # this name specifically has <array_name>:<vol_name> in it so the buckets 
+        # should be unique per volume across all arrays
+        a = A('terms', field='vol_name')
+        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}],_source=['array_id','array_name','name','timeofquery'])
+        s.aggs.bucket('per_vol_name',a).bucket('top_vol_hits', t) 
+
+        # dump query to log
+        self.logger.info("Query executed {} ".format(s.to_dict()))
+
+        # execute the query and check for relevant hits
+        r = s.execute()
+
+        # loop through buckets and see if anyone has enough "hits"
+        for b in r.aggregations.per_vol_name.buckets:
+            if b['doc_count'] >= self._monitor.hits:
+                # this means that monitor query had a number of hits over the threshold established by the user
+                self.logger.info("{} hits ".format(b['doc_count']))
+
+                # now query the message documents and see if this monitor already fired this alert 
+                # based on the 'latest' document ( which basically means I am ringing the bell again
+                # for the same thing ). I get the 'latest' document because of the sort order I set
+                # in the query above.
+                # if _find_message_document( self._monitor.id, ['top_vol_hits']['hits']['hits'][0]['_source']['_id'])
+
+                # debug log the bucket 
+                self.logger.info(b)
+
+                # create a "alert document" and deposit it in correct index
+                self._user_defined_message(b)
+
+    
+    # create a new document and insert into messages
+    # index of pureelk, customer will be able to see it 
+    # in normal location for alerts
+    def _user_defined_message(self, bucket):
+        # create a 'message' document that will look like a array_message document
+        am = {}
+        # extract array_from document in the top_hits bucket 
+        am['array_name'] = bucket['top_vol_hits']['hits']['hits'][0]['_source']['array_name']
+        am['array_id'] = bucket['top_vol_hits']['hits']['hits'][0]['_source']['array_id']
+        am['array_name_a'] = am['array_name']
+        am[PureArrayMonitor._timeofquery_key] = self._timeofquery_str
+        am['actual'] = "{} Matching Samples".format(bucket['doc_count'])
+        am['category'] = 'user_defined'
+        am['current_severity'] = self._monitor.severity
+        am['details'] = "User defined alert message for {}".format(bucket['key'])
+        am['event'] = "Monitor triggered"
+        am['expected'] = "{} not {} {}".format(self._monitor.metric, self._monitor.compare, self._monitor.value)
+        am['component_name'] = "volume.user_defined"
+        ms = json.dumps(am)
+        res = self._es_client.index(index=self._msgs_index, doc_type='arraymsg', body=ms, ttl=self._monitor.data_ttl)
+
+
+    '''
+    "category": "array",
+        "array_id": "8f57327e-68ee-7599-063a-53fadd8eb2f6",
+        "array_name_a": "dogfood1492",
+        "code": 25,
+        "actual": "80.08%",
+        "opened": "2016-02-19T02:03:05Z",
+        "component_type": "storage",
+        "array_name": "dogfood1492",
+        "id": 677696,
+        "timeofquery": "2016-02-21T21:52:11.281464",
+        "current_severity": "info",
+        "details": "",
+        "expected": "< 90.00%",
+        "event": "high utilization",
+        "component_name": "array.capacity"
+    '''

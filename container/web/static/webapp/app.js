@@ -36,6 +36,29 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                      changeArrayCollectionStatus: {
                          method: 'PUT',
                          url: 'rest/arrays/:arrayid'
+                     },
+                     getMonitors: {
+                         method: 'GET',
+                         url: 'rest/monitors/',
+                         isArray: true
+                     },
+                     deleteMonitor: {
+                         method: 'DELETE',
+                         url: 'rest/monitors/:monitorid'
+                     },
+                     addMonitor: {
+                         method: 'POST',
+                         url: 'rest/monitors/',
+                         headers: {'Content-Type': 'application/json'}
+                     },
+                     updateMonitor: {
+                         method: 'PUT',
+                         url: 'rest/monitors/:monitorid',
+                         headers: {'Content-Type': 'application/json'}
+                     },
+                     changeMonitorCollectionStatus: {
+                         method: 'PUT',
+                         url: 'rest/monitors/:monitorid'
                      }
                  });
              })
@@ -173,6 +196,110 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                                 $scope.reloadArray();
                             }, function(error) {
                                 $scope.editarrayError.message = error.data.message;
+                            });
+                    }
+                    $scope.deleteMonitor = function (monitor_id) {
+                        PureElkRestService.deleteMonitor({monitorid: monitor_id});
+                        $scope.reloadMonitor();
+                    };
+
+                    $scope.isMonitorCollecting = function(monitor) {
+                        return monitor.hasOwnProperty('enabled') ? monitor.enabled : true;
+                    }
+
+                    $scope.getMonitorCollectionStatus = function(monitor) {
+                        if (!monitor.task_state)
+                            return "NOT STARTED";
+                        if (!$scope.isCollecting(monitor))
+                            return "PAUSED";
+                        return monitor.task_state;
+                    }
+
+                    $scope.changeMonitorCollectionStatus = function (monitor) {
+                        // monitor context has "enabled=true" by default if "enabled" property doesn't exist
+                        isEnabled = $scope.isMonitorCollecting(monitor);
+
+                        // change collection status to opposite
+                        monitor.enabled = !isEnabled;
+                        PureElkRestService.changeMonitorCollectionStatus({monitorid:monitor.id}, {enabled : monitor.enabled});
+                        $log.info("Changed monitor collection status to " + monitor.enabled);
+                    }
+
+
+                    $scope.resetNewMonitor = function() {
+                        $scope.newmonitor = { data_ttl : "90", frequency: "60" };
+                        $scope.newmonitorError = {};
+                    }
+
+                    $scope.setupMonitorAdd = function() {
+                        $scope.resetNewMonitor();
+                    }
+
+                    $scope.addMonitor = function () {
+                        $log.info('Adding monitor');
+
+                        // make a quick clone of the new monitor object and modify the TTL to add 'days'
+                        var cloneOfNewMonitor = JSON.parse(JSON.stringify($scope.newmonitor));
+                        cloneOfNewMonitor.data_ttl = cloneOfNewMonitor.data_ttl + 'd';
+
+
+                        PureElkRestService.addMonitor(angular.toJson(cloneOfNewMonitor)).$promise.then(function(data){
+                            // success handler
+                            $('#modalNewMonitor').modal('hide');
+                            $scope.reloadMonitor();
+                        }, function(error) {
+                            $scope.newmonitorError.message = error.data.message;
+                        });
+                    }
+
+                    $scope.reloadMonitor = function () {
+                        PureElkRestService.getMonitors().$promise.then(function(monitorData) {
+                           $scope.puremonitors = monitorData;
+                        });
+                    }
+
+                    $scope.reloadMonitor();
+                    $interval($scope.reloadMonitor, 5000);
+
+                    // every second go in there to update the monitor updated time (seconds ago)
+                    $interval(function(){
+                        for (var monitor in $scope.puremonitors) {
+                            monitor.refresh_seconds_ago = Math.floor(new Date().getTime() / 1000 - monitor.task_timestamp)
+                        }
+                    }, 1000)
+
+                    $scope.setupMonitorEdit = function(monitor) {
+                        // set up a copy of the monitor to bind into the "edit monitor" view.
+                        var editmonitor = $.extend(true, {}, monitor);
+
+                        if (!!monitor.data_ttl)
+                        {
+                            // Need to trim away the day unit string "d".
+                            editmonitor.data_ttl = monitor.data_ttl.substring(0, monitor.data_ttl.length - 1);
+                        }
+
+                        $scope.monitorEdit = {
+                            original: monitor,
+                            edit: editmonitor
+                        };
+
+                        $scope.editmonitorError = {};
+                    }
+
+                    $scope.updateMonitor = function() {
+                        $log.info('Updating monitor: ' + $scope.monitorEdit.original.id);
+                        var original = $scope.monitorEdit.original;
+                        var edit = JSON.parse(JSON.stringify($scope.monitorEdit.edit));
+
+                        edit.data_ttl = edit.data_ttl + 'd';
+                
+                        PureElkRestService.updateMonitor({monitorid: edit.id}, angular.toJson(edit))
+                            .$promise.then(function(data){
+                                // success handler
+                                $('#modalEditMonitor').modal('hide');
+                                $scope.reloadMonitor();
+                            }, function(error) {
+                                $scope.editmonitorError.message = error.data.message;
                             });
                     }
                 });

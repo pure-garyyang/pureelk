@@ -1,5 +1,6 @@
 import argparse
 import rest_arrays
+import rest_monitors
 import sys
 import os
 
@@ -14,6 +15,8 @@ app = Flask(__name__)
 
 # Registering blueprints
 app.register_blueprint(rest_arrays.arrays, url_prefix='/rest/arrays')
+
+app.register_blueprint(rest_monitors.monitors, url_prefix='/rest/monitors')
 
 # As initialized upon program startup, the first item of this list (sys.path), path[0],
 # is the directory containing the script that was used to invoke the Python interpreter.

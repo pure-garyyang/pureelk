@@ -9,4 +9,7 @@ class ErrorCodes(Enum):
     ArrayError = "array-error"
     ArrayIdMismatch = "array-id-mismatch"
     ArrayAlreadyExists = "array-already-exists"
+    MonitorNotFound = "monitor-not-found"
+    MonitorAlreadyExists = "monitor-already-exists"
+
 

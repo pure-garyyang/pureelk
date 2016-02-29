@@ -1,0 +1,127 @@
+<!-- Modal -->
+<div class="modal fade" id="modalNewMonitor" tabindex="-1" role="dialog"
+     aria-labelledby="Add new PureMonitor">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form ng-submit="addMonitor()">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" ng-click="resetNewMonitor()"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h2 class="modal-title" id="myModalLabel">Add a new PureMonitor</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputName">Name</label>
+                        <input type="text" class="form-control" id="inputName"
+                               ng-model="newmonitor.name"
+                               placeholder="NickName for Monitor">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricType">Metric Type:</label>
+                         <select class="form-control" id="metricType" ng-model="newmonitor.type">
+                            <option value="array">Array</option>
+                            <option value="vol">Volume</option>
+                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPureMonitorArray">Array Regexp</label>
+                        <input type="text" class="form-control" id="inputPureMonitorArray"
+                               ng-model="newmonitor.array_name"
+                               placeholder="Array">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputVolume">Volume Regexp</label>
+                        <input type="text" class="form-control" id="inputVolume"
+                               ng-model="newmonitor.vol_name"
+                               placeholder="Volume">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricToMonitor">Metric to Monitor:</label>
+                         <select class="form-control" id="metricToMonitor" ng-model="newmonitor.metric">
+                            <option value="usec_per_read_op">Read Latency</option>
+                            <option value="usec_per_write_op">Write Latency</option>
+                            <option value="input_per_sec">Write Bandwidth</option>
+                            <option value="output_per_sec">Read Bandwidth</option>
+                            <option value="writes_per_sec">Write IOPS</option>
+                            <option value="reads_per_sec">Read IOPS</option>
+                            <option value="total">Total Used Space</option>
+                            <option value="system">System Space</option>
+                            <option value="shared_space">Shared Space</option>
+                            <option value="volumes">Unique Volume Space</option>
+                            <option value="free">Free Space</option>
+                            <option value="data_reduction">Data Reduction</option>
+                            <option value="total_reduction">Total Reduction</option>
+                            <option value="queue_depth">Queue Depth</option>
+                            <option value="percent_free">Percent Free</option>
+                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="compareFunction">Comparison:</label>
+                         <select class="form-control" id="compareFunction" ng-model="newmonitor.compare">
+                            <option value="gt">></option>
+                            <option value="gte">>=</option>
+                            <option value="lt"><</option>
+                            <option value="lte"><=</option>
+                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputValue">Value</label>
+                        <input type="number" class="form-control" id="inputValue"
+                               ng-model="newmonitor.value"
+                               placeholder="Value">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputHits">Hits</label>
+                        <input type="number" class="form-control" id="inputHits"
+                               ng-model="newmonitor.hits"
+                               placeholder="Hits">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputWindow">Window</label>
+                        <input type="text" class="form-control" id="inputWindow"
+                               ng-model="newmonitor.window"
+                               placeholder="Window">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputSeverity">Severity</label>
+                        <select class="form-control" id="severity" ng-model="newmonitor.severity">
+                            <option value="info">Informational</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputTTL">Message Time-To-Live</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="inputTTL"
+                                   ng-model="newmonitor.data_ttl"
+                                   value="90">
+                            <div class="input-group-addon">days</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="collectionInterval">Collection interval:</label>
+                         <select class="form-control" id="collectionInterval" ng-model="newmonitor.frequency">
+                            <option value="60">60 seconds</option>
+                            <option value="120">120 seconds</option>
+                            <option value="180">180 seconds</option>
+                            <option value="240">240 seconds</option>
+                            <option value="300">300 seconds</option>
+                         </select>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert" ng-show="newMonitorError.message">{{ newmonitorError.message }}</div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="resetNewMonitor()">
+                        Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">Start monitoring</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -17,6 +17,9 @@ celery -A pureelk.worker worker --loglevel=info --beat --config workerconfig --w
 # Start the array collection tasks on array_tasks queue, using gevent concurrency mode since it is I/O intensive
 celery -A pureelk.worker worker --loglevel=info --config workerconfig --workdir worker/ --logfile /var/log/pureelk/array-tasks.log -P gevent -Q array_tasks  &
 
+# Start the monitor tasks on monitor_tasks queue, using gevent concurrency mode since it is I/O intensive
+celery -A pureelk.worker worker --loglevel=info --config workerconfig --workdir worker/ --logfile /var/log/pureelk/monitor-tasks.log -P gevent -Q monitor_tasks  &
+
 # Export the python modules from worker and web folder
 export PYTHONPATH=$PYTHONPATH:/pureelk/web/:/pureelk/worker/
 

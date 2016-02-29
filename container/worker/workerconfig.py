@@ -16,5 +16,6 @@ CELERY_TIMEZONE = 'UTC'
 # Send the following tasks to different queues such that
 # they will be pick up by a different worker.
 CELERY_ROUTES = {
-    'pureelk.tasks.array_collect': {'queue': 'array_tasks'}
+    'pureelk.tasks.array_collect': {'queue': 'array_tasks'},
+    'pureelk.tasks.run_monitor': {'queue': 'monitor_tasks'}
 }

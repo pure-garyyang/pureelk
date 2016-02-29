@@ -94,7 +94,7 @@ start_containers() {
     if [ $? -eq 1 ];
     then
         print_warn "$PUREELK does not exist yet, run a new one..."
-        docker run -d -p 8080:8080 --name=$PUREELK -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
+        docker run -d -p 8080:8080 --name=$PUREELK -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk:test
     elif [ "$RUNNING" == "false" ];
     then
         docker start $PUREELK

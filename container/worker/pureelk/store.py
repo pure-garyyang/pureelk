@@ -3,8 +3,10 @@ import os
 import urllib
 
 from pureelk.arraycontext import ArrayContext
+from pureelk.monitorcontext import MonitorContext
 
-STATE_FILE = ".pureelk.arrays.state"
+ARRAY_STATE_FILE = ".pureelk.arrays.state"
+MONITOR_STATE_FILE = ".purelk.monitors.state"
 
 class Store(object):
 
@@ -44,7 +46,7 @@ class Store(object):
         return arrays
 
     def save_array_states(self, arrays):
-        with open(os.path.join(self._path, STATE_FILE), 'w') as state_file:
+        with open(os.path.join(self._path, ARRAY_STATE_FILE), 'w') as state_file:
             state_file.write(json.dumps([a.get_state_json() for a in arrays]))
 
     def save_array_config(self, array):
@@ -76,7 +78,73 @@ class Store(object):
         raise ValueError("Array config {} not found".format(filename))
 
     def _load_state(self):
-        path = os.path.join(self._path, STATE_FILE)
+        path = os.path.join(self._path, ARRAY_STATE_FILE)
+        state = []
+        self._logger.info("loading state from {}".format(path))
+        if os.path.exists(path):
+            with open(path) as state_file:
+                state = json.load(state_file)
+                self._logger.info("Loaded state = {}".format(state))
+
+        return state
+
+    def load_monitors(self):
+        monitors = {}
+
+        # Load all the json configs for the monitors.
+        for file_name in os.listdir(self._path):
+            if file_name.endswith(".json.mon"):
+                try:
+                    monitor = self._load_monitor_config_one(file_name)
+                    monitors[monitor.id] = monitor
+                except Exception as e:
+                    self._logger.warn("Exception at loading config {}: {}".format(file_name, e))
+
+        try:
+            # Load the monitors execution state and merge them in.
+            for monitor_state in self._load_monitor_state():
+                monitor_id = monitor_state[MonitorContext.ID]
+                if monitor_id in monitors:
+                    monitors[monitor_id].update_state_json(monitor_state)
+        except Exception as e:
+            self._logger.warn("Exception at loading execution state {}".format(e))
+
+        return monitors
+
+    def save_monitor_states(self, monitors):
+        with open(os.path.join(self._path, MONITOR_STATE_FILE), 'w') as state_file:
+            state_file.write(json.dumps([a.get_state_json() for a in monitors]))
+
+    def save_monitor_config(self, monitor):
+        file_name = os.path.join(self._path, urllib.unquote(monitor.id) + ".json.mon")
+        with open(file_name, "w") as config_file:
+            config_file.write(json.dumps(monitor.get_config_json()))
+
+    def remove_monitor_config(self, id):
+        file_name = os.path.join(self._path, urllib.unquote(id) + ".json.mon")
+        try:
+            os.remove(file_name)
+        except OSError as error:
+            self._logger.warn("Error when removing monitor '{}': {}".format(id, error))
+
+    def _load_monitor_config_one(self, filename):
+        path = os.path.join(self._path, filename)
+        if os.path.exists(path):
+            monitor = MonitorContext()
+            with open(path) as json_file:
+                json_object = json.load(json_file)
+                monitor.update_config_json(json_object)
+                # TODO: We use file name as id if it is not present in the JSON.
+                if not monitor.id:
+                    monitor.id = urllib.quote(os.path.splitext(filename)[0])
+                self._logger.info("Loaded config = {}".format(json_object))
+
+            return monitor
+
+        raise ValueError("monitor config {} not found".format(filename))
+
+    def _load_monitor_state(self):
+        path = os.path.join(self._path, MONITOR_STATE_FILE)
         state = []
         self._logger.info("loading state from {}".format(path))
         if os.path.exists(path):

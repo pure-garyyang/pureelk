@@ -1,0 +1,43 @@
+<div class="thumbnail">
+    <div class="statuscard">
+
+        <div class="card-remove-array card-change-array-btn">
+            <button type="button" class="btn" aria-label="Stop Pure Monitor" ng-click="changeMonitorCollectionStatus(monitor)">
+                <span ng-class="isCollecting(monitor) ? 'glyphicon glyphicon-pause' : 'glyphicon glyphicon-play'" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="card-remove-array card-edit-array-btn">
+            <button type="button" class="btn" aria-label="Edit Pure Monitor" data-toggle="modal" data-target="#modalEditMonitor" ng-click="setupMonitorEdit(monitor)">
+              <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="card-remove-array card-remove-array-btn">
+            <button type="button" class="btn" aria-label="Delete Pure Monitor" ng-click="deleteMonitor(monitor.id)">
+                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="card-title">
+            <span>{{ monitor.name }}</span>
+        </div>
+
+        <div class="card-info">
+            <div class="card-info-os">
+                Pure {{monitor.type === "array" ? "Array" : "Volume"}} Monitor
+            </div>
+        </div>
+
+        <div class="card-collection-status">
+            <div class="card-collection-status-title">Status</div>
+            <div class="card-collection-status-content">{{ getMonitorCollectionStatus(monitor) }}</div>
+        </div>
+
+        <div class="card-collection-status">
+            <div class="card-collection-status-title">Last collected</div>
+            <div class="card-collection-status-content">{{ getUpdatedAgo(monitor.task_timestamp) }}</div>
+        </div>
+
+    </div>
+</div>
