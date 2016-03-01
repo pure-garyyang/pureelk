@@ -5,14 +5,14 @@ MAINTAINER Gary Yang <garyyang@purestorage.com>; Cary Li <cary.li@purestorage.co
 EXPOSE 8080
 
 RUN apt-get update && apt-get install -y rabbitmq-server python-pip python-dev vim nodejs-legacy npm curl
-RUN pip install Celery
-RUN pip install purestorage
-RUN pip install gevent
-RUN pip install Flask
-RUN pip install elasticsearch
-RUN pip install python-dateutil
-RUN pip install enum34
-RUN npm install elasticdump
+RUN pip install Celery==3.1.18
+RUN pip install purestorage==1.4.0
+RUN pip install gevent==1.0.2
+RUN pip install Flask==0.10.1
+RUN pip install elasticsearch==1.6.0
+RUN pip install python-dateutil==2.4.2
+RUN pip install enum34==1.0.4
+RUN npm install elasticdump@0.15.0
 
 ENV target_folder /pureelk
 ADD container/ $target_folder
