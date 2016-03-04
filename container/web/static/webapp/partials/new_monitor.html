@@ -83,6 +83,13 @@
                                ng-model="newmonitor.window"
                                placeholder="Window">
                     </div>
+                    <div>
+                        <select class="form-control" id="inputWindowScope" ng-model="newmonitor.window_scope">
+                                <option value="m">Mins</option>
+                                <option value="h">Hrs</option>
+                                <option value="d">days</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="inputSeverity">Severity</label>
                         <select class="form-control" id="severity" ng-model="newmonitor.severity">

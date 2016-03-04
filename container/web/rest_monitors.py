@@ -92,15 +92,18 @@ def update_monitor(monitor_id, json_body=None):
     # get existing data from monitor dict
     monitor = monitor_dict[monitor_id]
 
-    # since I am changig some thing about the monitor generate a new UUID so
+    # remove its on-disk config 
+    store.remove_monitor_config(monitor.id)
+
+    # now update internal state of monitor with client-side json data
+    monitor.update_config_json(json_body)
+
+    # since I am changing some thing about the monitor generate a new UUID so
     # the algorithm to limit duplicate message triggering works correctly 
     # in purecollector.py monitor()
-    new_monitor_id = str(uuid.uuid4())
-    json_body.update({
-        MonitorContext.ID: new_monitor_id,
-    })
+    monitor.id = str(uuid.uuid4())
 
-    monitor.update_config_json(json_body)
+    # now save the json state to disk
     store.save_monitor_config(monitor)
 
     return monitor.get_json()

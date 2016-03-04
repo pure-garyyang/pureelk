@@ -52,7 +52,7 @@ def arrays_schedule():
         # instead of waiting for the next schedule.
         is_time_to_run = monitor_context.task_starttime + monitor_context.frequency <= now + SCHEDULE_TOLERANCE
 
-        if array_context.enabled and last_task_completed and is_time_to_run:
+        if monitor_context.enabled and last_task_completed and is_time_to_run:
             task = run_monitor.apply_async([monitor_context], expires=TASK_TIMEOUT)
             monitor_context.task = task
             monitor_context.task_starttime = now

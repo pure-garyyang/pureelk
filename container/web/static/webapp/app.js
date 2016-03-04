@@ -227,7 +227,7 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
 
 
                     $scope.resetNewMonitor = function() {
-                        $scope.newmonitor = { data_ttl : "90", frequency: "60" };
+                        $scope.newmonitor = { array_name: "*", vol_name: "*", window: "1", window_scope: "d", severity : "info", data_ttl : "90", frequency: "60" };
                         $scope.newmonitorError = {};
                     }
 

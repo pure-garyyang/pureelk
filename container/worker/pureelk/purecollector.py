@@ -339,7 +339,7 @@ class PureArrayMonitor(object):
 
         #now bucketize the results to make so we can access 'hits' per object
         a = A('terms', field='array_name')
-        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}], _source=['array_id','array_name','timeofquery'])
+        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}], _source=['array_id','array_name'])
         s.aggs.bucket('per_array_name',a).bucket('top_array_hits', t)
 
         # dump query to log
@@ -352,12 +352,17 @@ class PureArrayMonitor(object):
         for b in r.aggregations.per_array_name.buckets:
             if b['doc_count'] >= self._monitor.hits:
                 # this means that monitor query had a number of hits over the threshold established by the user
-                self.logger.info("PureArrayMonitor had {} hits".format(b['doc_count']))
+                self.logger.info("PureArrayMonitor: {} hits ".format(b['doc_count']))
 
-                # debug log the bucket contents
-                self.logger.info(b)
+                # now query the message documents and see if this monitor already fired this alert 
+                # based on the 'latest' document. Unless I get new "hits for the query" I'll be creating 
+                # a new message alert for every collection interval. I tucked the monitor_id (uuid) and 
+                # the document id in the alert message for this reason
+                if self._is_repeat_message(b):
+                    self.logger.info("PureArrayMonitor: Skipping repeat message creation for {}".format(b['key']))
+                    continue
 
-                 # create a "alert document" and deposit it in correct index
+                # create a "alert document" and deposit it in correct index
                 self._user_defined_message(b)
 
     # create a new document and insert into messages
@@ -374,13 +379,36 @@ class PureArrayMonitor(object):
         am['category'] = 'user_defined'
         am['current_severity'] = self._monitor.severity
         am['actual'] = "{} Matching Samples".format(bucket['doc_count'])
-        am['details'] = "User defined alert message for {}".format(bucket['key'])
+        # put monitor id and latest "hit" in message, this helps stop excessive message creation
+        am['details'] = "{} {}".format(self._monitor.id, bucket['top_array_hits']['hits']['hits'][0]['_id'])
         am['event'] = "Monitor triggered"
         am['expected'] = "{} not {} {}".format(self._monitor.metric, self._monitor.compare, self._monitor.value)
         am['component_name'] = "array.user_defined"
         ms = json.dumps(am)
         res = self._es_client.index(index=self._msgs_index, doc_type='arraymsg', body=ms, ttl=self._monitor.data_ttl)
 
+    def _is_repeat_message(self,b):
+
+        #create a new search object
+        ms = Search(using=self._es_client)
+
+        ms = ms.index("pureelk-msgs-*")
+
+        # look for both uuid and document id in message
+        ms = ms.query(Q("wildcard", details="*{}*{}*".format(self._monitor.id, b['top_array_hits']['hits']['hits'][0]['_id'])))
+
+        # apply time window filter on query , this is just meant to help restrict query to a limited 
+        # number of documents to speed up check. 
+        ms = ms.filter('range',timeofquery={'lt':'now','gte': 'now-{}'.format(self._monitor.window)})
+
+        res = ms.execute()
+        
+        if res.hits.total > 0:
+            # a document was found that is a duplidate for this monitor
+            # don't create another message
+            return True
+
+        return False
 
 
 class PureVolumeMonitor(object):
@@ -420,7 +448,7 @@ class PureVolumeMonitor(object):
         # this name specifically has <array_name>:<vol_name> in it so the buckets 
         # should be unique per volume across all arrays
         a = A('terms', field='vol_name')
-        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}],_source=['array_id','array_name','name','timeofquery'])
+        t = A('top_hits', size=1, sort=[{'timeofquery': {'order':'desc'}}],_source=['array_id','array_name','name'])
         s.aggs.bucket('per_vol_name',a).bucket('top_vol_hits', t) 
 
         # dump query to log
@@ -436,13 +464,12 @@ class PureVolumeMonitor(object):
                 self.logger.info("{} hits ".format(b['doc_count']))
 
                 # now query the message documents and see if this monitor already fired this alert 
-                # based on the 'latest' document ( which basically means I am ringing the bell again
-                # for the same thing ). I get the 'latest' document because of the sort order I set
-                # in the query above.
-                # if _find_message_document( self._monitor.id, ['top_vol_hits']['hits']['hits'][0]['_source']['_id'])
-
-                # debug log the bucket 
-                self.logger.info(b)
+                # based on the 'latest' document. Unless I get new "hits for the query" I'll be creating 
+                # a new message alert for every collection interval. I tucked the monitor_id (uuid) and 
+                # the document id in the alert message for this reason
+                if self._is_repeat_message(b):
+                    self.logger.info("Skipping repeat message creation for {}".format(b['key']))
+                    continue
 
                 # create a "alert document" and deposit it in correct index
                 self._user_defined_message(b)
@@ -462,12 +489,36 @@ class PureVolumeMonitor(object):
         am['actual'] = "{} Matching Samples".format(bucket['doc_count'])
         am['category'] = 'user_defined'
         am['current_severity'] = self._monitor.severity
-        am['details'] = "User defined alert message for {}".format(bucket['key'])
-        am['event'] = "Monitor triggered"
+        # put monitor id and latest "hit" in message, this helps stop excessive message creation
+        am['details'] = "{} {}".format(self._monitor.id, bucket['top_vol_hits']['hits']['hits'][0]['_id'])
+        am['event'] = ""
         am['expected'] = "{} not {} {}".format(self._monitor.metric, self._monitor.compare, self._monitor.value)
         am['component_name'] = "volume.user_defined"
         ms = json.dumps(am)
         res = self._es_client.index(index=self._msgs_index, doc_type='arraymsg', body=ms, ttl=self._monitor.data_ttl)
+
+    def _is_repeat_message(self,b):
+
+        #create a new search object
+        ms = Search(using=self._es_client)
+
+        ms = ms.index("pureelk-msgs-*")
+
+        # look for both uuid and document id in message
+        ms = ms.query(Q("wildcard", details="*{}*{}*".format(self._monitor.id, b['top_vol_hits']['hits']['hits'][0]['_id'])))
+
+        # apply time window filter on query , this is just meant to help restrict query to a limited 
+        # number of documents to speed up check. 
+        ms = ms.filter('range',timeofquery={'lt':'now','gte': 'now-{}'.format(self._monitor.window)})
+
+        res = ms.execute()
+        
+        if res.hits.total > 0:
+            # a document was found that is a duplidate for this monitor
+            # don't create another message
+            return True
+
+        return False
 
 
     '''
