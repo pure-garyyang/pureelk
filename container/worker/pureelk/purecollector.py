@@ -115,6 +115,7 @@ auditmap = """
 }
 """
 
+
 class PureCollector(object):
     _timeofquery_key = 'timeofquery'
 
@@ -457,6 +458,9 @@ class PureMonitor(object):
         # create a 'message' document that will look like a array_message document
         # and insert it into elasticsearch index
 
+        # helper strings to make messages more readable
+        compare = { "gt" : ">" , "gte" : ">=", "lt" : "<", "lte" : "<="}
+
         # extract some standard fields from document
         hits = self._bucket_hits(b)
         th = hits[0]
@@ -469,10 +473,14 @@ class PureMonitor(object):
         self._am['details'] = "{} {}".format(self._monitor.id, th['_id'])
         
         self._am[self._timeofquery_key] = self._timeofquery_str
+        self._am['opened'] = self._timeofquery_str
+
         self._am['category'] = 'user_defined'
         self._am['current_severity'] = self._monitor.severity
-        self._am['actual'] = "{} docs matched in {}".format(b['doc_count'], self._monitor.window) 
-        self._am['expected'] = "{} not {} {}".format(self._monitor.metric, self._monitor.compare, self._monitor.value)
+        # let user see latest value in the set of hits for that metric
+        self._am['actual'] = "Latest {} = {}".format(self._monitor.metric, th['_source'][self._monitor.metric]) 
+        self._am['expected'] = "{} is not {} {}".format(self._monitor.metric, compare[self._monitor.compare], self._monitor.value)
+        self._am['event'] = "Monitor for {} triggered {} times in window of {}".format(self._monitor.metric, b['doc_count'], self._monitor.window)
         
         # subclass can add some fields like component_name or possible override fields packed above
         self._pack_other_message_fields(b)
@@ -496,7 +504,11 @@ class PureArrayMonitor(PureMonitor):
         return
 
     def _pack_other_message_fields(self,b):
-        self._am['component_name'] = 'array.user_defined'
+
+        hits = self._bucket_hits(b)
+        th = hits[0]
+        self._am['component_name'] = th['_source']['array_name']
+        self._am['component_type'] = 'array'
 
 class PureVolumeMonitor(PureMonitor):
 
@@ -508,4 +520,7 @@ class PureVolumeMonitor(PureMonitor):
         return 'vol_name'
 
     def _pack_other_message_fields(self,b):
-        self._am['component_name'] = 'volume.user_defined'
+        hits = self._bucket_hits(b)
+        th = hits[0]
+        self._am['component_name'] = th['_source']['vol_name']
+        self._am['component_type'] = 'volume'
