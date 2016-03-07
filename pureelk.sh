@@ -52,7 +52,7 @@ install() {
     fi
     
     print_info "Pulling elasticsearch image..."
-    docker pull elasticsearch
+    docker pull elasticsearch:2
 
     print_info "Pulling kibana image..."
     docker pull kibana
