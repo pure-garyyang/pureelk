@@ -478,9 +478,9 @@ class PureMonitor(object):
         self._am['category'] = 'user_defined'
         self._am['current_severity'] = self._monitor.severity
         # let user see latest value in the set of hits for that metric
-        self._am['actual'] = "Latest {} = {}".format(self._monitor.metric, th['_source'][self._monitor.metric]) 
-        self._am['expected'] = "{} is not {} {}".format(self._monitor.metric, compare[self._monitor.compare], self._monitor.value)
-        self._am['event'] = "Monitor for {} triggered {} times in window of {}".format(self._monitor.metric, b['doc_count'], self._monitor.window)
+        self._am['actual'] = "Latest sample ( {} = {} @ {} )".format(self._monitor.metric, th['_source'][self._monitor.metric], th['_source'][self._timeofquery_key]) 
+        self._am['expected'] = ""
+        self._am['event'] = "Monitor {} for {} {} {} triggered {} times in window of {}".format("NoName" if self._monitor.name == "" else self._monitor.name, self._monitor.metric, compare[self._monitor.compare], self._monitor.value, b['doc_count'], self._monitor.window)
         
         # subclass can add some fields like component_name or possible override fields packed above
         self._pack_other_message_fields(b)

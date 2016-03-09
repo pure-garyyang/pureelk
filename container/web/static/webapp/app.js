@@ -155,6 +155,7 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         $location.protocol() + "://" + $location.host() + ":5601/";
 
                     $scope.setupArrayEdit = function(flasharray) {
+
                         // set up a copy of the array to bind into the "edit array" view.
                         var editarray = $.extend(true, {}, flasharray);
 
@@ -226,13 +227,73 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                     }
 
 
+
+                    $scope.initMetricNameList = function() {
+                        $scope.selectedMetric.metricNameList = [{ name : "usec_per_read_op" , label : 'Read Latency'},
+                                { name : "usec_per_write_op", label :  'Write Latency'},
+                                { name : "input_per_sec" , label : 'Write Bandwidth'},
+                                { name : "output_per_sec", label :  'Read Bandwidth'},
+                                { name : "reads_per_sec" , label : 'Read IOPS'},
+                                { name : "writes_per_sec", label :  'Write IOPS'},
+                                { name : "total" , label : 'Total Used Space'},
+                                { name : "system", label :  'System Space'},
+                                { name : "shared_space" , label : 'Shared Space'},
+                                { name : "volumes", label :  'Unique Volume Space'},
+                                { name : "free" , label : 'Free Space'},
+                                { name : "data_reduction", label :  'Data Reduction'},
+                                { name : "total_reduction", label :  'Total Reduction'},
+                                { name : "queue_depth", label :  'Queue Depth'},
+                                { name : "percent_free", label :  'Percent Free'}];
+                    }
+
+
+                    $scope.setMetricUnitList = function(name) {
+                        // setup units depending on selected metric
+
+
+                        if (name == 'usec_per_write_op' || name == 'usec_per_read_op') {
+                            $scope.selectedMetric.metricUnitList = [{unit : 'us' , label: 'us'},
+                            {unit : 'ms' , label: 'ms'},
+                            {unit : 's' , label: 's'}
+                            ];
+                        } else if( name == 'input_per_sec' || name == 'output_per_sec' ) {
+                            $scope.selectedMetric.metricUnitList = [{unit : 'b' , label: 'Bytes/s'},
+                            {unit : 'kb' , label: 'KB/s'},
+                            {unit : 'mb' , label: 'MB/s'},
+                            {unit : 'gb' , label: 'GB/s'}
+                            ];
+                        } else if( name == 'total' || name == 'system' || name == 'shared_space' || name == 'volumes' || name == 'pfree') {
+                            $scope.selectedMetric.metricUnitList = [{unit : 'kb' , label: 'KB'},
+                            {unit : 'mb' , label: 'MB'},
+                            {unit : 'gb' , label: 'GB'},
+                            {unit : 'tb' , label: 'TB'},
+                            {unit : 'pb' , label: 'PB'}
+                            ];
+                        } else if(name == 'data_reduction' || name == 'total_reduction') {
+                            $scope.selectedMetric.metricUnitList = [];
+                            $scope.selectedMetric.metricUnitString = "to 1";
+
+                        } else if(name == 'percent_free' ){
+                            $scope.selectedMetric.metricUnitList = [];
+                            $scope.selectedMetric.metricUnitString = "%";
+
+                        } else {
+                            // unrecognized units
+                            $scope.metricUnits = [];
+                            $scope.metricUnitString = "";
+                        }
+                    }
+
+
                     $scope.resetNewMonitor = function() {
                         $scope.newmonitor = { array_name: "*", vol_name: "*", window: "1", window_scope: "d", severity : "info", data_ttl : "90", frequency: "60" };
-                        $scope.newmonitorError = {};
+                        $scope.newmonitorError = {}; 
+                        $scope.selectedMetric = { name:"undefined", unit:"undefined" };
                     }
 
                     $scope.setupMonitorAdd = function() {
                         $scope.resetNewMonitor();
+                        $scope.initMetricNameList();
                     }
 
                     $scope.addMonitor = function () {
@@ -241,7 +302,9 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         // make a quick clone of the new monitor object and modify the TTL to add 'days'
                         var cloneOfNewMonitor = JSON.parse(JSON.stringify($scope.newmonitor));
                         cloneOfNewMonitor.data_ttl = cloneOfNewMonitor.data_ttl + 'd';
-
+                        cloneOfNewMonitor.window = cloneOfNewMonitor.window + cloneOfNewMonitor.window_scope
+                        cloneOfNewMonitor.metric = $scope.selectedMetric.name
+                        cloneOfNewMonitor.metric_unit = $scope.selectedMetric.unit
 
                         PureElkRestService.addMonitor(angular.toJson(cloneOfNewMonitor)).$promise.then(function(data){
                             // success handler
@@ -278,10 +341,27 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                             editmonitor.data_ttl = monitor.data_ttl.substring(0, monitor.data_ttl.length - 1);
                         }
 
+                        if (!!monitor.window)
+                        {
+                            // Need to trim away the scope "d m h".
+                            editmonitor.window = monitor.window.substring(0, monitor.window.length - 1);
+                        }
+
                         $scope.monitorEdit = {
                             original: monitor,
                             edit: editmonitor
                         };
+
+                        // get name of metric and units from monitor
+                        $scope.selectedMetric.name = monitor.metric
+                        $scope.selectedMetric.unit = monitor.metric_unit
+
+                        // loop through metrics and setup model correctly
+                        $scope.initMetricNameList()
+
+                        // now setup the unitList correctly for dropdown
+                        $scope.setMetricUnitList($scope.selectedMetric.name)
+
 
                         $scope.editmonitorError = {};
                     }
@@ -292,6 +372,9 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         var edit = JSON.parse(JSON.stringify($scope.monitorEdit.edit));
 
                         edit.data_ttl = edit.data_ttl + 'd';
+                        edit.window = edit.window + edit.window_scope;
+                        edit.metric = $scope.selectedMetric.name
+                        edit.metric_unit = $scope.selectedMetric.unit
                 
                         PureElkRestService.updateMonitor({monitorid: edit.id}, angular.toJson(edit))
                             .$promise.then(function(data){

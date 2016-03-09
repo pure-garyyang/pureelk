@@ -36,59 +36,55 @@
                                ng-model="newmonitor.vol_name"
                                placeholder="Volume">
                     </div>
-                    <div class="form-group">
-                        <label for="metricToMonitor">Metric to Monitor:</label>
-                         <select class="form-control" id="metricToMonitor" ng-model="newmonitor.metric">
-                            <option value="usec_per_read_op">Read Latency</option>
-                            <option value="usec_per_write_op">Write Latency</option>
-                            <option value="input_per_sec">Write Bandwidth</option>
-                            <option value="output_per_sec">Read Bandwidth</option>
-                            <option value="writes_per_sec">Write IOPS</option>
-                            <option value="reads_per_sec">Read IOPS</option>
-                            <option value="total">Total Used Space</option>
-                            <option value="system">System Space</option>
-                            <option value="shared_space">Shared Space</option>
-                            <option value="volumes">Unique Volume Space</option>
-                            <option value="free">Free Space</option>
-                            <option value="data_reduction">Data Reduction</option>
-                            <option value="total_reduction">Total Reduction</option>
-                            <option value="queue_depth">Queue Depth</option>
-                            <option value="percent_free">Percent Free</option>
-                         </select>
+                    <div>
+                        <label for="metricToMonitor">Metric Expression:</label>
                     </div>
-                    <div class="form-group">
-                        <label for="compareFunction">Comparison:</label>
-                         <select class="form-control" id="compareFunction" ng-model="newmonitor.compare">
-                            <option value="gt">></option>
-                            <option value="gte">>=</option>
-                            <option value="lt"><</option>
-                            <option value="lte"><=</option>
-                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="inputValue">Value</label>
-                        <input type="number" class="form-control" id="inputValue"
-                               ng-model="newmonitor.value"
-                               placeholder="Value">
-                    </div>
-                    <div class="form-group">
-                        <label for="inputHits">Hits</label>
-                        <input type="number" class="form-control" id="inputHits"
-                               ng-model="newmonitor.hits"
-                               placeholder="Hits">
-                    </div>
-                    <div class="form-group">
-                        <label for="inputWindow">Window</label>
-                        <input type="text" class="form-control" id="inputWindow"
-                               ng-model="newmonitor.window"
-                               placeholder="Window">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <select class="form-control" id="metricToMonitor" ng-model="selectedMetric.name" ng-options="item.name as item.label for item in selectedMetric.metricNameList" ng-change="setMetricUnitList(selectedMetric.name)">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                             <select class="form-control" id="compareFunction" ng-model="newmonitor.compare">
+                                <option value="gt">></option>
+                                <option value="gte">>=</option>
+                                <option value="lt"><</option>
+                                <option value="lte"><=</option>
+                             </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="inputValue"
+                                   ng-model="newmonitor.value"
+                                   placeholder="Value">
+                        </div>
+                        <div class="form-group">
+                            <select class="form-control" ng-if="selectedMetric.metricUnitList.length > 0" id="metricUnitsSelect" ng-model="selectedMetric.unit" ng-options="item.unit as item.label for item in selectedMetric.metricUnitList">
+                            </select>
+                            <label ng-if="selectedMetric.metricUnitList.length <= 0" id="metricUnitsString">{{selectedMetric.metricUnitString}}</label>
+                        </div>
                     </div>
                     <div>
-                        <select class="form-control" id="inputWindowScope" ng-model="newmonitor.window_scope">
-                                <option value="m">Mins</option>
-                                <option value="h">Hrs</option>
-                                <option value="d">days</option>
-                        </select>
+                        <label for="inputHits">Number of Matching Samples:</label>
+                    </div>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="inputHits"
+                                   ng-model="newmonitor.hits"
+                                   placeholder="# Samples">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputWindow">In:</label>
+                            <input type="text" class="form-control" id="inputWindow"
+                                   ng-model="newmonitor.window"
+                                   placeholder="<Number>">
+                        </div>
+                        <div class="form-group">
+                            <select class="form-control" id="inputWindowScope" ng-model="newmonitor.window_scope">
+                                    <option value="m">Mins</option>
+                                    <option value="h">Hrs</option>
+                                    <option value="d">days</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="inputSeverity">Severity</label>
@@ -108,8 +104,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="collectionInterval">Collection interval:</label>
-                         <select class="form-control" id="collectionInterval" ng-model="newmonitor.frequency">
+                        <label for="mmonitorInterval">Monitor interval:</label>
+                         <select class="form-control" id="monitorInterval" ng-model="newmonitor.frequency">
                             <option value="60">60 seconds</option>
                             <option value="120">120 seconds</option>
                             <option value="180">180 seconds</option>

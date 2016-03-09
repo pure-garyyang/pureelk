@@ -150,6 +150,9 @@ def validate_monitor_input(input_json):
     if "value" not in input_json:
         return make_error(ErrorCodes.RequireFieldMissing.value, "'value' is not specified.")
 
+    if "hits" not in input_json:
+        return make_error(ErrorCodes.RequireFieldMissing.value, "'hits' is not specified.")
+
     if "window" not in input_json:
         return make_error(ErrorCodes.RequireFieldMissing.value, "'window' is not specified.")
 

@@ -53,7 +53,7 @@ class MonitorContext(object):
 
     @property
     def name(self):
-        return self._config_json[MonitorContext.NAME] if MonitorContext.NAME in self._config_json else None
+        return self._config_json[MonitorContext.NAME] if MonitorContext.NAME in self._config_json else ""
 
     @name.setter
     def name(self, value):
