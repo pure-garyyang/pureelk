@@ -21,6 +21,8 @@ class MonitorContext(object):
     HITS = "hits"
     TYPE = "type"
     SEVERITY = "severity"
+    UNIT="metric_unit"
+    ORIG_VALUE="orig_value"
 
     DEFAULT_SEVERITY = 'info'
 
@@ -95,8 +97,15 @@ class MonitorContext(object):
 
     @property
     def hits(self):
-        # Default to None, i.e. no data retention.
         return int(self._config_json[MonitorContext.HITS]) if MonitorContext.HITS in self._config_json else None
+
+    @property
+    def unit(self):
+        return self._config_json[MonitorContext.UNIT] if MonitorContext.UNIT in self._config_json else None
+
+    @property
+    def orig_value(self):
+        return int(self._config_json[MonitorContext.ORIG_VALUE]) if MonitorContext.ORIG_VALUE in self._config_json else None
 
     @property
     def type(self):

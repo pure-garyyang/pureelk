@@ -19,7 +19,7 @@
                     </div>
                      <div class="form-group">
                         <label for="metricType">Metric Type:</label>
-                         <select class="form-control" id="metricType" ng-model="monitorEdit.edit.type">
+                         <select class="form-control" id="metricType" ng-model="monitorEdit.edit.type" ng-change="changedMonitorType(monitorEdit.edit.type)">
                             <option value="array">Array</option>
                             <option value="vol">Volume</option>
                          </select>
@@ -41,7 +41,7 @@
                     </div>
                     <div class="form-inline">
                         <div class="form-group">
-                            <select class="form-control" id="metricToMonitor" ng-model="selectedMetric.name" ng-options="item.name as item.label for item in selectedMetric.metricNameList" ng-change="setMetricUnitList(selectedMetric.name)">
+                            <select class="form-control" id="metricToMonitor" ng-model="selectedMetric.name" ng-options="item.name as item.label for item in selectedMetric.metricNameList" ng-change="changedMetricName(selectedMetric.name)">
                             </select>
                         </div>
                         <div class="form-group">

@@ -19,33 +19,35 @@
                     </div>
                     <div class="form-group">
                         <label for="metricType">Metric Type:</label>
-                         <select class="form-control" id="metricType" ng-model="newmonitor.type">
+                         <select class="form-control" id="metricType" ng-model="newmonitor.type" ng-change="changedMonitorType(newmonitor.type)">
                             <option value="array">Array</option>
                             <option value="vol">Volume</option>
                          </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" >
                         <label for="inputPureMonitorArray">Array Regexp</label>
                         <input type="text" class="form-control" id="inputPureMonitorArray"
                                ng-model="newmonitor.array_name"
-                               placeholder="Array">
+                               placeholder="Array"
+                               ng-disabled="selectedMetric.metricNameList.length <= 0">
                     </div>
                     <div class="form-group">
                         <label for="inputVolume">Volume Regexp</label>
                         <input type="text" class="form-control" id="inputVolume"
                                ng-model="newmonitor.vol_name"
-                               placeholder="Volume">
+                               placeholder="Volume"
+                               ng-disabled="selectedMetric.metricNameList.length <= 0">
                     </div>
                     <div>
                         <label for="metricToMonitor">Metric Expression:</label>
                     </div>
                     <div class="form-inline">
                         <div class="form-group">
-                            <select class="form-control" id="metricToMonitor" ng-model="selectedMetric.name" ng-options="item.name as item.label for item in selectedMetric.metricNameList" ng-change="setMetricUnitList(selectedMetric.name)">
+                            <select class="form-control" id="metricToMonitor" ng-model="selectedMetric.name" ng-options="item.name as item.label for item in selectedMetric.metricNameList" ng-change="changedMetricName(selectedMetric.name)" ng-disabled="selectedMetric.metricNameList.length <= 0">
                             </select>
                         </div>
                         <div class="form-group">
-                             <select class="form-control" id="compareFunction" ng-model="newmonitor.compare">
+                             <select class="form-control" id="compareFunction" ng-model="newmonitor.compare" ng-disabled="selectedMetric.metricNameList.length <= 0">
                                 <option value="gt">></option>
                                 <option value="gte">>=</option>
                                 <option value="lt"><</option>
@@ -55,10 +57,11 @@
                         <div class="form-group">
                             <input type="text" class="form-control" id="inputValue"
                                    ng-model="newmonitor.value"
-                                   placeholder="Value">
+                                   placeholder="Value"
+                                   ng-disabled="selectedMetric.metricNameList.length <= 0">
                         </div>
                         <div class="form-group">
-                            <select class="form-control" ng-if="selectedMetric.metricUnitList.length > 0" id="metricUnitsSelect" ng-model="selectedMetric.unit" ng-options="item.unit as item.label for item in selectedMetric.metricUnitList">
+                            <select class="form-control" ng-init="selectedMetric.unit=selectedMetric.metricUnitList[0].unit" ng-if="selectedMetric.metricUnitList.length > 0" id="metricUnitsSelect" ng-model="selectedMetric.unit" ng-options="item.unit as item.label for item in selectedMetric.metricUnitList">
                             </select>
                             <label ng-if="selectedMetric.metricUnitList.length <= 0" id="metricUnitsString">{{selectedMetric.metricUnitString}}</label>
                         </div>

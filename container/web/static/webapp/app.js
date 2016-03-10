@@ -226,10 +226,41 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         $log.info("Changed monitor collection status to " + monitor.enabled);
                     }
 
+                    $scope.changedMonitorType = function(type) {
+                        // in this case I either chose for the first time or changed the monitor type ( array / vol )
+
+                        // setup the list of metric for dropdown
+                        $scope.setMetricNameList(type);
+
+                        // now initialize other vars
+                        // these should get set when chose a metric from the dropdown
+                        $scope.selectedMetric.name = "";
+                        $scope.selectedMetric.unit = "";
+                        $scope.selectedMetric.metricUnitList = [];
+                        $scope.selectedMetric.metricUnitString = "";
+                        $scope.selectedMetric.value = "";
+
+                    }
+
+                    $scope.changedMetricName = function(name) {
+                        // ok now you have selected a metric or changed an existing one
+
+                        // setup list of unit options 
+                        $scope.setMetricUnitList(name);
+
+                        // I selected a new kind of clear our any residual unit 
+                        // I need this because there are some metrics with no "units"
+                        // and won't be cleared by ng-init
+                        // queue_depth and data_reduction for example. in all other cases 
+                        // I am hoping the ng-init should do the right thing
+                        $scope.selectedMetric.unit = "";
+
+                    }
 
 
-                    $scope.initMetricNameList = function() {
-                        $scope.selectedMetric.metricNameList = [{ name : "usec_per_read_op" , label : 'Read Latency'},
+                    $scope.setMetricNameList = function(type) {
+                        if( type == 'array' ) {
+                            $scope.selectedMetric.metricNameList = [{ name : "usec_per_read_op" , label : 'Read Latency'},
                                 { name : "usec_per_write_op", label :  'Write Latency'},
                                 { name : "input_per_sec" , label : 'Write Bandwidth'},
                                 { name : "output_per_sec", label :  'Read Bandwidth'},
@@ -244,43 +275,71 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                                 { name : "total_reduction", label :  'Total Reduction'},
                                 { name : "queue_depth", label :  'Queue Depth'},
                                 { name : "percent_free", label :  'Percent Free'}];
+                        } else if (type == 'vol') {
+                           $scope.selectedMetric.metricNameList = [{ name : "usec_per_read_op" , label : 'Read Latency'},
+                                { name : "usec_per_write_op", label :  'Write Latency'},
+                                { name : "input_per_sec" , label : 'Write Bandwidth'},
+                                { name : "output_per_sec", label :  'Read Bandwidth'},
+                                { name : "reads_per_sec" , label : 'Read IOPS'},
+                                { name : "writes_per_sec", label :  'Write IOPS'},
+                                { name : "total" , label : 'Total Used Space'},
+                                { name : "volumes", label :  'Unique Volume Space'},
+                                { name : "free" , label : 'Free Space'},
+                                { name : "data_reduction", label :  'Data Reduction'},
+                                { name : "total_reduction", label :  'Total Reduction'},
+                                { name : "percent_free", label :  'Percent Free'}];
+                        } else {
+                            $scope.selectedMetric.metricNameList = []
+                        }
+                        
                     }
 
+                    $scope.computeValue = function(unit, value) {
+                        var i;
+                        for ( i=0; i < $scope.selectedMetric.metricUnitList.length; i++ ) {
+                            if( $scope.selectedMetric.metricUnitList[i].unit == unit ) {
+                                return String(Number(value) * Number($scope.selectedMetric.metricUnitList[i].factor));
+                            }
+                        }
+                        // if I don't find a conversion just return original value
+                        return String(value);
+                    }
 
                     $scope.setMetricUnitList = function(name) {
                         // setup units depending on selected metric
 
 
                         if (name == 'usec_per_write_op' || name == 'usec_per_read_op') {
-                            $scope.selectedMetric.metricUnitList = [{unit : 'us' , label: 'us'},
-                            {unit : 'ms' , label: 'ms'},
-                            {unit : 's' , label: 's'}
+                            $scope.selectedMetric.metricUnitList = [{unit : 'us' , label: 'us', factor: "1"},
+                            {unit : 'ms' , label: 'ms', factor: "1000"},
+                            {unit : 's' , label: 's', factor: "1000000"}
                             ];
                         } else if( name == 'input_per_sec' || name == 'output_per_sec' ) {
-                            $scope.selectedMetric.metricUnitList = [{unit : 'b' , label: 'Bytes/s'},
-                            {unit : 'kb' , label: 'KB/s'},
-                            {unit : 'mb' , label: 'MB/s'},
-                            {unit : 'gb' , label: 'GB/s'}
+                            $scope.selectedMetric.metricUnitList = [{unit : 'b' , label: 'Bytes/s', factor:"1"},
+                            {unit : 'kb' , label: 'KB/s', factor: "1024"},
+                            {unit : 'mb' , label: 'MB/s', factor: "1048576"},
+                            {unit : 'gb' , label: 'GB/s', factor: "1073741824"}
                             ];
-                        } else if( name == 'total' || name == 'system' || name == 'shared_space' || name == 'volumes' || name == 'pfree') {
-                            $scope.selectedMetric.metricUnitList = [{unit : 'kb' , label: 'KB'},
-                            {unit : 'mb' , label: 'MB'},
-                            {unit : 'gb' , label: 'GB'},
-                            {unit : 'tb' , label: 'TB'},
-                            {unit : 'pb' , label: 'PB'}
+                        } else if( name == 'total' || name == 'system' || name == 'shared_space' || name == 'volumes' || name == 'free') {
+                            $scope.selectedMetric.metricUnitList = [{unit : 'b' , label: 'Bytes', factor: "1"},
+                            {unit : 'kb' , label: 'KB', factor: "1024" },
+                            {unit : 'mb' , label: 'MB' , factor:"1048576" },
+                            {unit : 'gb' , label: 'GB', factor: "1073741824"},
+                            {unit : 'tb' , label: 'TB', factor: "1099511627776"},
+                            {unit : 'pb' , label: 'PB', factor: "1125899906842624"}
                             ];
                         } else if(name == 'data_reduction' || name == 'total_reduction') {
                             $scope.selectedMetric.metricUnitList = [];
                             $scope.selectedMetric.metricUnitString = "to 1";
 
                         } else if(name == 'percent_free' ){
-                            $scope.selectedMetric.metricUnitList = [];
-                            $scope.selectedMetric.metricUnitString = "%";
+                            $scope.selectedMetric.metricUnitList = [{unit: "%", label:"%", factor:"0.01"}];
+                            $scope.selectedMetric.metricUnitString = "";
 
                         } else {
                             // unrecognized units
-                            $scope.metricUnits = [];
-                            $scope.metricUnitString = "";
+                            $scope.selectedMetric.metricUnitList = [];
+                            $scope.selectedMetric.metricUnitString = "";
                         }
                     }
 
@@ -293,7 +352,7 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
 
                     $scope.setupMonitorAdd = function() {
                         $scope.resetNewMonitor();
-                        $scope.initMetricNameList();
+                        $scope.setMetricNameList("");
                     }
 
                     $scope.addMonitor = function () {
@@ -305,6 +364,9 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         cloneOfNewMonitor.window = cloneOfNewMonitor.window + cloneOfNewMonitor.window_scope
                         cloneOfNewMonitor.metric = $scope.selectedMetric.name
                         cloneOfNewMonitor.metric_unit = $scope.selectedMetric.unit
+                        // compute the value for the query using the appropriate units
+                        cloneOfNewMonitor.orig_value = cloneOfNewMonitor.value
+                        cloneOfNewMonitor.value = $scope.computeValue($scope.selectedMetric.unit, cloneOfNewMonitor.value)
 
                         PureElkRestService.addMonitor(angular.toJson(cloneOfNewMonitor)).$promise.then(function(data){
                             // success handler
@@ -335,6 +397,17 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         // set up a copy of the monitor to bind into the "edit monitor" view.
                         var editmonitor = $.extend(true, {}, monitor);
 
+                        // intitialize all the selectedMetric stuff 
+                        $scope.selectedMetric = { name:"undefined", unit:"undefined" };
+                        // loop through metrics and setup model correctly
+                        $scope.setMetricNameList(monitor.type)
+                        // get name of metric and units from monitor
+                        $scope.selectedMetric.name = monitor.metric
+                        $scope.selectedMetric.unit = monitor.metric_unit
+
+                        // now setup the unitList correctly for dropdown
+                        $scope.setMetricUnitList($scope.selectedMetric.name)
+
                         if (!!monitor.data_ttl)
                         {
                             // Need to trim away the day unit string "d".
@@ -347,20 +420,15 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                             editmonitor.window = monitor.window.substring(0, monitor.window.length - 1);
                         }
 
+                        // put original value back into "value" so it gets displayed / computed correctly in updateMonitor
+                        editmonitor.value = monitor.orig_value
+
                         $scope.monitorEdit = {
                             original: monitor,
                             edit: editmonitor
                         };
 
-                        // get name of metric and units from monitor
-                        $scope.selectedMetric.name = monitor.metric
-                        $scope.selectedMetric.unit = monitor.metric_unit
-
-                        // loop through metrics and setup model correctly
-                        $scope.initMetricNameList()
-
-                        // now setup the unitList correctly for dropdown
-                        $scope.setMetricUnitList($scope.selectedMetric.name)
+                        
 
 
                         $scope.editmonitorError = {};
@@ -375,6 +443,10 @@ var pureelkApp = angular.module('pureelk', ['ngRoute', 'ngResource'])
                         edit.window = edit.window + edit.window_scope;
                         edit.metric = $scope.selectedMetric.name
                         edit.metric_unit = $scope.selectedMetric.unit
+                        // compute the value for the query using the appropriate units
+                        edit.orig_value = edit.value
+                        edit.value = $scope.computeValue($scope.selectedMetric.unit, edit.value)
+
                 
                         PureElkRestService.updateMonitor({monitorid: edit.id}, angular.toJson(edit))
                             .$promise.then(function(data){
