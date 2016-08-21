@@ -1,4 +1,4 @@
-# Monitoring Pure Storage Flash Array with ELK
+# Monitoring a Pure Storage FlashArray with ELK
 
 1. [Overview](#overview)
 2. [Getting Started](#getting-started)
