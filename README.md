@@ -51,6 +51,8 @@ The installation script will install the latest version of Docker then pull the 
 
 Once installation is completed, the containers will be started and PureELK will be accessible at: http://VM-HOSTNAME:8080.
 
+NOTE: The docker daemon runs as the root user and binds to a Unix socket instead of a TCP port. By default, that Unix socket is owned by root. To run Docker commands without ``` sudo ``` it's necessary to add the appropriate username to the Docker group (created during install). To perform this task, enter the following command on the Docker VM: ``` sudo usermod -aG docker <username> ```. For this to take effect, you will need to log out and back into the shell.
+
 ### Configuring PureELK
 
 
