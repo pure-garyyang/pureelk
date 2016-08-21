@@ -1,22 +1,3 @@
-<!--
-http://www.apache.org/licenses/LICENSE-2.0.txt
-
-
-Copyright 2015 Pure Storage
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 # Monitoring Pure Storage Flash Array with ELK
 
 1. [Overview](#overview)
@@ -24,18 +5,13 @@ limitations under the License.
   * [System Requirements](#system-requirements)
   * [Installation](#installation)
   * [Configuring PureELK](#configuring-pureelk)
-  ** Start Monitoring a FlashArray
-  ** Stop Monitoring a FlashArray
+  * [Start Monitoring a FlashArray](#start-monitoring-a-flasharray)
+  * [Stop Monitoring a FlashArray](#stop-monitoring-a-flasharray)
   * [Accessing PureELK](#accessing-pureelk)
-  * [Configuring Kibana for PureELK](#configuring-kibana)
+  * [Configuring Kibana for PureELK](#configuring-kibana-for-pureelk)
   * [Running PureELK](#running-pureelk)
-  ** Automatic Start of PureELK
-3. [Contributing](#contributing)
-4. [TODO](#todo)
-5. [Contributors](#contributors)
-  * [Initial Authors](#initial-authors)
-  * [Maintainers](#maintainers)
-6. [License](#license)
+  * [Automatic Start of PureELK](#automatic-start-of-pureelk)
+3. [License](#license)
 
 ## Overview
 
@@ -46,6 +22,7 @@ Why use PureELK? All Pure Storage FlashArrays send data about the array to Pure 
 PureELK utilizes the popular ELK stack (Elasticsearch, Logstash, and Kibana), a front end written in Nodejs to easily manage FlashArrays, and Pure Storage FlashArray REST APIs in the back end all configured and deployed using Docker containers.
 
 ## Getting Started
+
 
 ### System Requirements
 
@@ -66,9 +43,10 @@ The installation script will install the latest version of Docker then pull the 
 * Kibana
 * PureELK
 
-Once installation is completed, the containers will be started and PureELK will be accessible at: http://HOSTNAME:8080.
+Once installation is completed, the containers will be started and PureELK will be accessible at: http://VM-HOSTNAME:8080.
 
 ### Configuring PureELK
+
 
 #### Start Monitoring a FlashArray
 
@@ -76,15 +54,15 @@ Before configuring PureELK, the API key is needed for the username that will be 
 
 To get the API key, access the Pure Storage FlashArray GUI and navigate to the Users section under the System menu.
 
-Mouse over the user's name and select the cogwheel next to the name and select Get API Key <-- NEED TO VERIFY THIS STEP.
+Mouse over the user's name and select the cogwheel next to the name and select Show API Token.
 
 Navigate to PureELK configuration page at http://VM-HOSTNAME:8080 and click the orange + to add FlashArray(s).
 
 * Enter the FlashArray hostname or IP
 * Enter the username
 * Enter the API key
-* Set Metric TTL (default: 90 days)
-* Set the collect interval (default: 60 seconds)
+* [Optional] Set Metric TTL (default: 90 days)
+* [Optional] Set the collect interval (default: 60 seconds)
 * Click Start monitoring
 
 The PureELK screen will display if connecting to the FlashArray was a success or failure.
@@ -95,15 +73,13 @@ Navigate to PureELK configuration page at http://VM-HOSTNAME:8080 and click the 
 
 ### Accessing PureELK Monitoring
 
-Access Kibana directly by navigating to http://VM-HOSTNAME:5061 or PureELK at http://VM-HOSTNAME:8080 and click Go to Kibana
+Access Kibana directly by navigating to http://VM-HOSTNAME:5061 or PureELK at http://VM-HOSTNAME:8080 and click Go to Kibana.
 
 ### Configuring Kibana for PureELK
 
 Kibana is a very robust platform that allows an incredible amount of customization to view data that is stored in logstash.
 
-To simplify getting started with Kibana, a few bootstrap queries and dashboards have been preloaded. This may satisfy the needs of most but if additional views are required, see the Kibana user guide for creating customer queries.
-
-List of dashboards, queries, etc
+To simplify getting started with Kibana, numerous dashboards, searches, and visualizations have been preloaded. This may satisfy the needs of most but if additional views are required, see the Kibana user guide for creating custom queries.
 
 ### Running PureELK
 
@@ -111,12 +87,13 @@ During installation, PureELK is automatically started and will continue to run u
 
 To further operate PureELK, command line options are available on the host VM.
 
-``` Usage: /var/lib/pureelk/pureelk.sh {help|install|start|stop|attach|delete}
+```
+Usage: /var/lib/pureelk/pureelk.sh {help|install|start|stop|attach|delete}
 ```
 
 ##### help
 
-Shows this help options menu.
+Shows the help options menu.
 
 ##### install
 
@@ -136,7 +113,7 @@ Connect to the PureELK docker container in a bash prompt.
 
 ##### delete
 
-Force stop of PureELK and deletes the container from the host. Does not delete the Docker images.
+Force stop of PureELK and deletes the container from the host. *Does not delete the Docker images*.
 
 ```
 $ bash /var/lib/pureelk/pureelk.sh delete
@@ -152,10 +129,5 @@ pureelk-elasticsearch
 
 To facilitate the automatic start of PureELK, an upstart script, ``` pureelk.conf ``` has been added to ``` /etc/init/ ```. Given the dependency on Upstart, the recommended Linux distribution and version is Ubuntu 14.04 LTS.
 
-## TODO
-
-* Detect init system and add appropriate script to enable the automatic start of containers.
-* Modify deployment of PureELK to use docker-compose or docker-swarm. Using native clustering may negate need for init script.
-
 ## License
-PureELK is Open Source software released under the Apache 2.0 [License](LICENSE).
+PureELK is Open Source software released under the Apache 2.0 License.
