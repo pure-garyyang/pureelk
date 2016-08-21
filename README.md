@@ -21,11 +21,11 @@ PureELK is an open source monitoring solution for Pure Storage FlashArrays.
 
 Why use PureELK? All Pure Storage FlashArrays send data about the array to Pure Storage every 30 seconds and this data is visible through the Pure1 dashboard. This rich SaaS platform allows you to view the health, performance, and capacity of the array from anywhere. There are some customers that can't take advantage of this feature due to high security demands. PureELK allows customers with security concerns to still have a rich platform to visualize array health and performance data. There are others that love data and visualization and PureELK provides customers with the ability to learn more about data on their FlashArray.
 
-<img src="https://github.com/pureelk/pureelk/raw/master/doc/pureelk_network_architecture.png" width="65%">
+<img src="https://github.com/pureelk/pureelk/raw/master/doc/pureelk_network_architecture.png" height=200px width="50%">
 
 PureELK utilizes the popular ELK stack (Elasticsearch, Logstash, and Kibana), a front end written in Nodejs to easily manage FlashArrays, and Pure Storage FlashArray REST APIs in the back end all configured and deployed using Docker containers.
 
-<img src="https://github.com/pureelk/pureelk/raw/master/doc/pureelk_solution_stack.png" width="65%">
+<img src="https://github.com/pureelk/pureelk/raw/master/doc/pureelk_solution_stack.png" height=250px width="50%">
 
 ## Getting Started
 
