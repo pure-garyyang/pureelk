@@ -1,6 +1,5 @@
-# Monitoring a Pure Storage FlashArray with ELK
-
-----
+Monitoring a Pure Storage FlashArray with ELK
+---------------------------------------------
 
 1. [Overview](#overview)
 2. [Getting Started](#getting-started)
@@ -12,6 +11,7 @@
   * [Accessing PureELK](#accessing-pureelk)
   * [Configuring Kibana for PureELK](#configuring-kibana-for-pureelk)
   * [Running PureELK](#running-pureelk)
+  * [Data Persistence](#data-persistence)
   * [Automatic Start of PureELK](#automatic-start-of-pureelk)
 3. [License](#license)
 
@@ -56,7 +56,7 @@ NOTE: The docker daemon runs as the root user and binds to a Unix socket instead
 ### Configuring PureELK
 
 
-#### Start Monitoring a FlashArray
+### Start Monitoring a FlashArray
 
 Before configuring PureELK, the API key is needed for the username that will be pulling data from the FlashArray to PureELK.
 
@@ -79,7 +79,7 @@ The PureELK screen will display if connecting to the FlashArray was a success or
 
 Navigate to PureELK configuration page at http://VM-HOSTNAME:8080 and click the trash can icon next to the name of the FlashArray that is being monitored.
 
-### Accessing PureELK Monitoring
+### Accessing PureELK
 
 Access Kibana directly by navigating to http://VM-HOSTNAME:5061 or PureELK at http://VM-HOSTNAME:8080 and click Go to Kibana.
 
@@ -133,7 +133,14 @@ Removing PureElk elastic search container...
 pureelk-elasticsearch
 ```
 
-#### Automatic Start of PureELK
+### Data Persistence
+
+Data persistence is handled by using a host directory mounted as a data volume.
+
+* Elasticsearch data is stored in ``` /usr/share/elasticsearch/data ```
+* PureELK: ``` /var/lib/pureelk/ ``` and ```/var/log/pureelk ```
+
+### Automatic Start of PureELK
 
 To facilitate the automatic start of PureELK, an upstart script, ``` pureelk.conf ``` has been added to ``` /etc/init/ ```. Given the dependency on Upstart, the recommended Linux distribution and version is Ubuntu 14.04 LTS.
 
