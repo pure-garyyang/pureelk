@@ -32,7 +32,7 @@ PureELK utilizes the popular ELK stack (Elasticsearch, Logstash, and Kibana), a 
 
 ### System Requirements
 
-* Ubuntu 14.04 LTS installed (dependency on Ubuntu for upstart)
+* Linux Distribution (Ubuntu tested)
 * 4 GB RAM allocated
 * 20 GB capacity to store 90 days of historical data for each FlashArray
 
@@ -142,7 +142,7 @@ Data persistence is handled by using a host directory mounted as a data volume.
 
 ### Automatic Start of PureELK
 
-To facilitate the automatic start of PureELK, an upstart script, ``` pureelk.conf ``` has been added to ``` /etc/init/ ```. Given the dependency on Upstart, the recommended Linux distribution and version is Ubuntu 14.04 LTS.
+To facilitate the automatic start of PureELK, installation detects the init system in use. If upstart has been detected, an upstart script, ``` pureelk.conf ``` has been added to ``` /etc/init/ ```. If systemd has been detected, ``` docker-pureelk.service ``` has been added to ``` /etc/systemd/system/ ``` and enabled.
 
 ## License
 PureELK is Open Source software released under the Apache 2.0 License.
