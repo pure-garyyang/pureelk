@@ -32,7 +32,7 @@ PureELK utilizes the popular ELK stack (Elasticsearch, Logstash, and Kibana), a 
 
 ### System Requirements
 
-* Linux Distribution (Ubuntu tested)
+* Linux Distribution (Ubuntu 14.04, Ubuntu 16.04, and CentOS 7 tested)
 * 4 GB RAM allocated
 * 20 GB capacity to store 90 days of historical data for each FlashArray
 
