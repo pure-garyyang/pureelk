@@ -106,7 +106,7 @@ install() {
   docker pull elasticsearch:2
 
   print_info "Pulling kibana image..."
-  docker pull kibana
+  docker pull kibana:4
 
   print_info "Pulling pureelk image..."
   docker pull pureelk/pureelk
@@ -136,7 +136,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_ES doesn't exist, starting..."
-      docker run -d -P --name=$PUREELK_ES -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
+      docker run -d -P --name=$PUREELK_ES --log-opt max-size=50m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_ES
@@ -149,7 +149,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_KI doesn't, starting..."
-      docker run -d -p 5601:5601 --name=$PUREELK_KI --link $PUREELK_ES:elasticsearch kibana
+      docker run -d -p 5601:5601 --name=$PUREELK_KI --log-opt max-size=50m --link $PUREELK_ES:elasticsearch kibana:4
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_KI
@@ -162,7 +162,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK doesn't exist, starting..."
-      docker run -d -p 8080:8080 --name=$PUREELK -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
+      docker run -d -p 8080:8080 --name=$PUREELK --log-opt max-size=50m -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK
