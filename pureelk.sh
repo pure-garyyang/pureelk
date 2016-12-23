@@ -17,7 +17,7 @@ PUREELK_SCRIPT_URL=https://raw.githubusercontent.com/pureelk/pureelk/master/pure
 PUREELK_SCRIPT_LOCALPATH=$PUREELK_PATH/pureelk.sh
 
 print_help() {
-  echo "Usage: $0 {help|install|start|stop|attach|delete}"
+  echo "Usage: $0 {help|install [dns_ip]|start [dns_ip]|stop|attach|delete}"
 }
 
 print_info() {
@@ -174,6 +174,50 @@ start_containers() {
   print_info "PureELK Kibana endpoint is at http://localhost:5601"
 }
 
+start_containers_with_dns() {
+  print_info "Starting PureElk elasticsearch container..."
+  RUNNING="$(docker inspect -f '{{.State.Running}}' $PUREELK_ES)"
+  if [ $? -eq 1 ];
+  then
+      print_warn "$PUREELK_ES doesn't exist, starting..."
+      docker run -d -P --name=$PUREELK_ES --dns=$1 --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
+  elif [ "$RUNNING" == "false" ];
+  then
+      docker start $PUREELK_ES
+  else
+      print_warn "$PUREELK_ES is already running."
+  fi
+
+  print_info "Start PureElk kibana container..."
+  RUNNING="$(docker inspect -f '{{.State.Running}}' $PUREELK_KI)"
+  if [ $? -eq 1 ];
+  then
+      print_warn "$PUREELK_KI doesn't, starting..."
+      docker run -d -p 5601:5601 --name=$PUREELK_KI --dns=$1 --log-opt max-size=100m --link $PUREELK_ES:elasticsearch kibana:4
+  elif [ "$RUNNING" == "false" ];
+  then
+      docker start $PUREELK_KI
+  else
+      print_warn "$PUREELK_KI is already running."
+  fi
+
+  print_info "Start PureElk container..."
+  RUNNING="$(docker inspect -f '{{.State.Running}}' $PUREELK)"
+  if [ $? -eq 1 ];
+  then
+      print_warn "$PUREELK doesn't exist, starting..."
+      docker run -d -p 8080:8080 --name=$PUREELK --dns=$1 --log-opt max-size=100m -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
+  elif [ "$RUNNING" == "false" ];
+  then
+      docker start $PUREELK
+  else
+      print_warn "$PUREELK is already running."
+  fi
+
+  print_info "PureELK management endpoint is at http://localhost:8080"
+  print_info "PureELK Kibana endpoint is at http://localhost:5601"
+}
+
 stop_containers() {
   print_info "Stopping PureELK container..."
   docker stop -t 2 $PUREELK
@@ -209,10 +253,20 @@ if [ -n "$1" ];
          ;;
       install)
          install
-         start_containers
+         if [ -n "$2" ];
+         then
+             start_containers_with_dns $2
+         else
+           start_containers
+         fi
          ;;
       start)
-         start_containers
+         if [ -n "$2" ];
+         then
+             start_containers_with_dns $2
+         else 
+             start_containers
+         fi
          ;;
       stop)
          stop_containers
