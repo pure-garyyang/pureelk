@@ -17,7 +17,7 @@ PUREELK_SCRIPT_URL=https://raw.githubusercontent.com/pureelk/pureelk/master/pure
 PUREELK_SCRIPT_LOCALPATH=$PUREELK_PATH/pureelk.sh
 
 print_help() {
-  echo "Usage: $0 {help|install|start|stop|attach|delete}"
+  echo "Usage: $0 {help|install [dns_ip]|start|stop|attach|delete}"
 }
 
 print_info() {
@@ -132,11 +132,17 @@ install() {
 
 start_containers() {
   print_info "Starting PureElk elasticsearch container..."
+  if [ -n "$1" ];
+  then
+    DNS_ARG='--dns='$1
+  else
+    DNS_ARG=''
+  fi
   RUNNING="$(docker inspect -f '{{.State.Running}}' $PUREELK_ES)"
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_ES doesn't exist, starting..."
-      docker run -d -P --name=$PUREELK_ES --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
+      docker run -d -P --name=$PUREELK_ES $DNS_ARG --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_ES
@@ -149,7 +155,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_KI doesn't, starting..."
-      docker run -d -p 5601:5601 --name=$PUREELK_KI --log-opt max-size=100m --link $PUREELK_ES:elasticsearch kibana:4
+      docker run -d -p 5601:5601 --name=$PUREELK_KI $DNS_ARG --log-opt max-size=100m --link $PUREELK_ES:elasticsearch kibana:4
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_KI
@@ -162,7 +168,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK doesn't exist, starting..."
-      docker run -d -p 8080:8080 --name=$PUREELK --log-opt max-size=100m -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
+      docker run -d -p 8080:8080 --name=$PUREELK $DNS_ARG --log-opt max-size=100m -v "$PUREELK_CONF":/pureelk/worker/conf -v "$PUREELK_LOG":/var/log/pureelk --link $PUREELK_ES:elasticsearch pureelk/pureelk
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK
@@ -209,7 +215,7 @@ if [ -n "$1" ];
          ;;
       install)
          install
-         start_containers
+         start_containers $2
          ;;
       start)
          start_containers
