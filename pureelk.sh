@@ -200,10 +200,6 @@ start_containers() {
 
   print_info "PureELK management endpoint is at http://localhost:8080"
   print_info "PureELK Kibana endpoint is at http://localhost:5601"
-
-
-
-
 }
 
 stop_containers() {
