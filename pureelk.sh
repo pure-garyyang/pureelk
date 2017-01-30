@@ -188,6 +188,7 @@ start_containers() {
       docker run -d -v /var/lib/docker/containers:/var/lib/docker/containers -v /var/log/pureelk:/var/log/pureelk --name $LOGROTATE \
         -e "LOGS_DIRECTORIES=/var/lib/docker/containers /var/log/pureelk" \
         -e "LOGROTATE_SIZE=20M" \
+        -e "LOGROTATE_COPIES=10" \
         -e "LOGROTATE_CRONSCHEDULE=* * * * * *" \
         -e "LOGROTATE_LOGFILE=/logs/logrotatecron.log" \
         blacklabelops/logrotate
