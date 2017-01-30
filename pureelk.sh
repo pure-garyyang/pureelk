@@ -8,6 +8,7 @@ PUREELK_LOG=/var/log/pureelk
 PUREELK_ES=pureelk-elasticsearch
 PUREELK_KI=pureelk-kibana
 PUREELK=pureelk
+LOGROTATE=blacklabelops-logrotate
 
 GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
@@ -111,6 +112,9 @@ install() {
   print_info "Pulling pureelk image..."
   docker pull pureelk/pureelk
 
+  print_info "Pulling logrotate image..."
+  docker pull blacklabelops/logrotate
+
   print_info "Creating local pureelk folders at $PUREELK_PATH"
 
   if [ ! -d "$PUREELK_CONF" ]; then
@@ -175,6 +179,25 @@ start_containers() {
   else
       print_warn "$PUREELK is already running."
   fi
+  
+  print_info "Start Logrotate container..."
+  RUNNING="$(docker inspect -f '{{.State.Running}}' $LOGROTATE)"
+  if [ $? -eq 1 ];
+  then
+      print_warn "$LOGROTATE doesn't exist, starting..."
+      docker run -d -v /var/lib/docker/containers:/var/lib/docker/containers -v /var/log/pureelk:/var/log/pureelk --name $LOGROTATE \
+        -e "LOGS_DIRECTORIES=/var/lib/docker/containers /var/log/pureelk" \
+        -e "LOGROTATE_SIZE=20M" \
+        -e "LOGROTATE_COPIES=10" \
+        -e "LOGROTATE_CRONSCHEDULE=* * * * * *" \
+        -e "LOGROTATE_LOGFILE=/logs/logrotatecron.log" \
+        blacklabelops/logrotate
+  elif [ "$RUNNING" == "false" ];
+  then
+      docker start $LOGROTATE
+  else
+      print_warn "$LOGROTATE is already running."
+  fi
 
   print_info "PureELK management endpoint is at http://localhost:8080"
   print_info "PureELK Kibana endpoint is at http://localhost:5601"
@@ -189,6 +212,9 @@ stop_containers() {
 
   print_info "Stopping PureELK elasticsearch container..."
   docker stop $PUREELK_ES
+
+  print_info "Stopping Logrotate elasticsearch container..."
+  docker stop $LOGROTATE
 }
 
 attach_pureelk() {
@@ -205,6 +231,9 @@ delete_containers() {
 
   print_info "Removing PureElk elastic search container..."
   docker rm -f $PUREELK_ES
+
+  print_info "Removing Logrotate elastic search container..."
+  docker rm -f $LOGROTATE
 }
 
 if [ -n "$1" ];
