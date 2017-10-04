@@ -45,7 +45,7 @@ def array_collect(array_context):
     logger.info("Collecting info for array '{}'".format(array_context.name))
 
     # Create PureStorage client and Elasticsearch client
-    ps_client = purestorage.FlashArray(array_context.host, api_token=array_context.api_token)
+    ps_client = purestorage.FlashArray(array_context.host, api_token=array_context.api_token, rest_version="1.4")
     # "elasticsearch" is the internal link to PureELK ES server
     es_client = Elasticsearch(hosts="elasticsearch:9200", retry_on_timeout=True)
 

@@ -94,7 +94,8 @@ END_OF_SYSTEMD
 
 install() {
   if [ "$(uname)" == "Linux" ]; then
-      if [ $(dpkg-query -W -f='${Status}' docker-engine 2>/dev/null | grep -c "ok installed") -eq 0 ];
+      which docker 
+      if [ $? -ne 0 ]
       then
           print_warn "Docker not yet installed, installing..."
           curl -sSL https://get.docker.com/ | sh
@@ -104,7 +105,7 @@ install() {
   fi
 
   print_info "Pulling elasticsearch image..."
-  docker pull elasticsearch:2
+  docker pull elasticsearch:2.4
 
   print_info "Pulling kibana image..."
   docker pull kibana:4
@@ -146,7 +147,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_ES doesn't exist, starting..."
-      docker run -d -P --name=$PUREELK_ES $DNS_ARG --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
+      docker run -d -P --name=$PUREELK_ES $DNS_ARG --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2.4 -Des.network.host=0.0.0.0
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_ES
