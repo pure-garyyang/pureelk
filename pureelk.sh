@@ -35,24 +35,29 @@ detect_distro()
   INIT=`ls -l /proc/1/exe`
   if [[ $INIT == *"upstart"* ]]; then
     SYSTEMINITDAEMON=upstart
-    config_upstart
   elif [[ $INIT == *"systemd"* ]]; then
     SYSTEMINITDAEMON=systemd
-    config_systemd
   elif [[ $INIT == *"/sbin/init"* ]]; then
     INIT=`/sbin/init --version`
     if [[ $INIT == *"upstart"* ]]; then
       SYSTEMINITDAEMON=upstart
-      config_upstart
     elif [[ $INIT == *"systemd"* ]]; then
       SYSTEMINITDAEMON=systemd
-      config_systemd
     fi
   fi
 
   if [ -z "$SYSTEMINITDAEMON" ]; then
     echo "WARNING: Unknown distribution, defaulting to systemd - this may fail." >&2
+    SYSTEMINITDAEMON=systemd
+  fi
+}
+
+config_service() {
+  if [ "$SYSTEMINITDAEMON" == "systemd" ]
+  then
     config_systemd
+  else
+    config_upstart
   fi
 }
 
@@ -94,11 +99,20 @@ END_OF_SYSTEMD
 
 install() {
   if [ "$(uname)" == "Linux" ]; then
+      detect_distro
+
       which docker 
       if [ $? -ne 0 ]
       then
           print_warn "Docker not yet installed, installing..."
           curl -sSL https://get.docker.com/ | sh
+
+          # For CentOS, we need to start the docker service
+          if [ "$SYSTEMINITDAEMON" == "systemd" ]
+          then
+            systemctl start docker
+            systemctl enable docker
+          fi
       else
           print_info "Docker is already installed"
       fi
@@ -130,7 +144,7 @@ install() {
       sudo mkdir -p $PUREELK_LOG
   fi
 
-  detect_distro
+  config_service
 
   print_info "Installation complete."
 }
