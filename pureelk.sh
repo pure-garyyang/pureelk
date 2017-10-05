@@ -35,24 +35,29 @@ detect_distro()
   INIT=`ls -l /proc/1/exe`
   if [[ $INIT == *"upstart"* ]]; then
     SYSTEMINITDAEMON=upstart
-    config_upstart
   elif [[ $INIT == *"systemd"* ]]; then
     SYSTEMINITDAEMON=systemd
-    config_systemd
   elif [[ $INIT == *"/sbin/init"* ]]; then
     INIT=`/sbin/init --version`
     if [[ $INIT == *"upstart"* ]]; then
       SYSTEMINITDAEMON=upstart
-      config_upstart
     elif [[ $INIT == *"systemd"* ]]; then
       SYSTEMINITDAEMON=systemd
-      config_systemd
     fi
   fi
 
   if [ -z "$SYSTEMINITDAEMON" ]; then
     echo "WARNING: Unknown distribution, defaulting to systemd - this may fail." >&2
+    SYSTEMINITDAEMON=systemd
+  fi
+}
+
+config_service() {
+  if [ "$SYSTEMINITDAEMON" == "systemd" ]
+  then
     config_systemd
+  else
+    config_upstart
   fi
 }
 
@@ -94,17 +99,27 @@ END_OF_SYSTEMD
 
 install() {
   if [ "$(uname)" == "Linux" ]; then
-      if [ $(dpkg-query -W -f='${Status}' docker-engine 2>/dev/null | grep -c "ok installed") -eq 0 ];
+      detect_distro
+
+      which docker 
+      if [ $? -ne 0 ]
       then
           print_warn "Docker not yet installed, installing..."
           curl -sSL https://get.docker.com/ | sh
+
+          # For CentOS, we need to start the docker service
+          if [ "$SYSTEMINITDAEMON" == "systemd" ]
+          then
+            systemctl start docker
+            systemctl enable docker
+          fi
       else
           print_info "Docker is already installed"
       fi
   fi
 
   print_info "Pulling elasticsearch image..."
-  docker pull elasticsearch:2
+  docker pull elasticsearch:2.4
 
   print_info "Pulling kibana image..."
   docker pull kibana:4
@@ -129,7 +144,7 @@ install() {
       sudo mkdir -p $PUREELK_LOG
   fi
 
-  detect_distro
+  config_service
 
   print_info "Installation complete."
 }
@@ -146,7 +161,7 @@ start_containers() {
   if [ $? -eq 1 ];
   then
       print_warn "$PUREELK_ES doesn't exist, starting..."
-      docker run -d -P --name=$PUREELK_ES $DNS_ARG --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2 -Des.network.host=0.0.0.0
+      docker run -d -P --name=$PUREELK_ES $DNS_ARG --log-opt max-size=100m -v "$PUREELK_ESDATA":/usr/share/elasticsearch/data elasticsearch:2.4 -Des.network.host=0.0.0.0
   elif [ "$RUNNING" == "false" ];
   then
       docker start $PUREELK_ES
