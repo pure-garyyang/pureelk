@@ -1,5 +1,8 @@
 #! /bin/bash
 
+set -x
+
+#statements
 # This is the startup script for the container. See Dockerfile instructions.
 
 # Start the rabbitmq which is used by the Celery worker
@@ -25,11 +28,18 @@ export PYTHONPATH=$PYTHONPATH:/pureelk/web/:/pureelk/worker/
 # user just needs to navigate to kibana and start monitoring
 
 python ./getPureElkIndex.py
+
 if [ $? -eq 1 ]
     then
         # no pureelk-global-arrays index found, run elasticdump to import new index patterns and kibana dashboards
         # so users has a one-button experience
+        echo "Importing index patterns into elasticsearch..."
         /node_modules/elasticdump/bin/elasticdump --input=/pureelk/elasticdump_pureelk --output=http://elasticsearch:9200/.kibana
+elif [ $? -eq 2 ]
+    then
+        # Stop the container by erroring out from the script.
+        echo "Didn't detect elastic search cluster. Aborting..."
+        exit 1
 fi
 
 # Start the Flask web-site
